@@ -7,6 +7,10 @@ body {
 
 .container {
     display: flex;
+    border: 5px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 20px;
+    border-radius: 10px;
 }
 
 .sidebar {
@@ -19,10 +23,11 @@ body {
     align-items: center;
     text-align: center;
     border-right: 5px solid white;
+    box-sizing: border-box;
 }
 
 .logo {
-    width: 100px;
+    width: 215px;
     margin-bottom: 20px;
 }
 
@@ -39,12 +44,18 @@ body {
     flex-grow: 1;
     padding: 20px;
     color: #FFD700;
+    border-left: 5px solid white;
+    border-top: 5px solid white;
+    border-bottom: 5px solid white;
+    border-radius: 0 10px 10px 0;
 }
 
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 2px solid white;
+    padding-bottom: 10px;
 }
 
 .time {
@@ -64,6 +75,11 @@ body {
     text-decoration: none;
     color: #FFD700;
     font-size: 1.2em;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: #FFFFFF;
 }
 
 .center-content {
