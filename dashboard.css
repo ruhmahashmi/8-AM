@@ -1,0 +1,90 @@
+/* CSS File: styles.css */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #07294E;
+    color: #000;
+}
+.container {
+    display: flex;
+    height: 100vh;
+}
+.sidebar {
+    width: 20%;
+    background-color: #07294E;
+    color: #FFC502;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid #fff;
+}
+.sidebar .logo {
+    width: 100%;
+    height: 35%;
+    background: url('https://upload.wikimedia.org/wikipedia/en/thumb/6/6d/Drexel_dragons_logo.svg/1200px-Drexel_dragons_logo.svg.png') no-repeat center;
+    background-size: contain;
+    margin-bottom: 20px;
+}
+.sidebar a {
+    text-decoration: none;
+    color: #FFC502;
+    font-size: 22px;
+    margin: 10px 0;
+}
+.content {
+    width: 80%;
+    background-color: #07294E;
+    padding: 20px;
+    color: #fff;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 10%;
+    padding: 10px 20px;
+    border-bottom: 1px solid #fff;
+}
+.header .time {
+    color: #FFC502;
+    font-size: 34px;
+}
+.header .nav-links a {
+    text-decoration: none;
+    color: #FFC502;
+    margin-left: 20px;
+}
+.welcome {
+    margin: 20px 0;
+    font-size: 28px;
+}
+.register-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #07294E;
+    border: 1px solid #fff;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+.main-section {
+    display: flex;
+    justify-content: space-between;
+}
+.dropdowns {
+    width: 48%;
+}
+.dropdowns select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.calendar {
+    width: 48%;
+    background-color: #f5f5f5;
+    color: #000;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
