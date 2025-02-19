@@ -1,7 +1,7 @@
 /* styles.css */
 body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #07294E, #0A3A6E);
     color: white;
     margin: 0;
     display: flex;
@@ -47,31 +47,33 @@ body {
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    border: 3px solid white;
+    border: 3px solid #FFC502;
 }
 
 .profile-info h1 {
     font-size: 26px;
     margin: 0;
+    color: #FFC502;
 }
 
 .profile-info p {
     font-size: 16px;
     opacity: 0.9;
+    color: white;
 }
 
 button {
-    background: #ff9800;
+    background: #FFC502;
     border: none;
     padding: 12px 18px;
     cursor: pointer;
-    color: white;
+    color: #07294E;
     border-radius: 8px;
     transition: 0.3s;
 }
 
 button:hover {
-    background: #e68900;
+    background: #E6B800;
     transform: scale(1.05);
 }
 
