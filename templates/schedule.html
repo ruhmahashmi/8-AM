@@ -31,7 +31,7 @@
             <div class="center-content">
                 <div class="left"> 
                     <h2>Pick your Courses</h2>
-                    <form>
+                    <form action="/save_schedule" method="POST">
                         <label for="course1">Course 1:</label>
                         <select id="course1" name="course1">
                             <option value="">Select Course</option>
@@ -409,10 +409,18 @@
                         <option value="spaced-out">Spaced-Out</option>
                         <option value="back2back">Back To Back</option>
                     </select>
+                    <button type="submit">Next</button>
+                    {% if message %}
+                    <p style="color: green;">{{ message }}</p>
+                    {% endif %}
                     </form>
                     </div>
                 </div>
+                
+
+
             </div>
+            
         </div>  
 </body>
 </html>
