@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .profile-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h1 {
+            color: #07294E;
+        }
+        .profile-info {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .profile-info p {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .profile-info strong {
+            color: #07294E;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h1>Your Profile</h1>
+        <div class="profile-info">
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>First Name:</strong> <span id="firstName"></span></p>
+            <p><strong>Last Name:</strong> <span id="lastName"></span></p>
+            <p><strong>Major:</strong> <span id="major"></span></p>
+            <p><strong>Minor:</strong> <span id="minor"></span></p>
+            <p><strong>Year:</strong> <span id="year"></span></p>
+            <p><strong>Co-Op Cycle:</strong> <span id="coOp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Retrieve user info from localStorage
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+        // Check if user info exists
+        if (userInfo) {
+            document.getElementById('email').textContent = userInfo.email;
+            document.getElementById('firstName').textContent = userInfo.firstName;
+            document.getElementById('lastName').textContent = userInfo.lastName;
+            document.getElementById('major').textContent = userInfo.major;
+            document.getElementById('minor').textContent = userInfo.minor;
+            document.getElementById('year').textContent = userInfo.year;
+            document.getElementById('coOp').textContent = userInfo.coOp;
+        } else {
+            document.querySelector('.profile-info').innerHTML = '<p>No profile information found. Please sign up first.</p>';
+        }
+    </script>
+</body>
+</html>
