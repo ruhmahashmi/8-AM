@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Needed for session storage
+app.secret_key = '579-605-787'  # Needed for session storage
 
 # Database setup function
 def init_db():
@@ -16,7 +16,10 @@ def init_db():
             course3 TEXT,
             course4 TEXT,
             course5 TEXT,
-            course6 TEXT
+            course6 TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            spacing TEXT
         )
     ''')
     conn.commit()
@@ -37,14 +40,21 @@ def save_schedule():
     course4 = request.form.get('course4')
     course5 = request.form.get('course5')
     course6 = request.form.get('course6')
+    start_time = request.form.get('start_time')
+    end_time = request.form.get('end_time')
+    spacing = request.form.get('spacing')
+
+    # Debugging: Print received input
+    print(f"Received Schedule: {course1}, {course2}, {course3}, {course4}, {course5}, {course6}")
+    print(f"Start Time: {start_time}, End Time: {end_time}, Spacing: {spacing}")
 
     # Save to database
     conn = sqlite3.connect('schedules.db')
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO schedules (course1, course2, course3, course4, course5, course6) 
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (course1, course2, course3, course4, course5, course6))
+        INSERT INTO schedules (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing))
     conn.commit()
     conn.close()
 
