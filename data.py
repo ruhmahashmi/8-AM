@@ -11,4 +11,4 @@ class User(db.Model, UserMixin):
     year = db.Column(db.Integer)
     major = db.Column(db.String(150))
     minor = db.Column(db.String(150))
-    co-op = db.Column(db.String(150))
+    co_op = db.Column(db.String(150))
