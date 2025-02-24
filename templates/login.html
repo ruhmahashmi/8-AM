@@ -93,6 +93,12 @@
             border: none;
             padding: 0 20px;
         }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -102,21 +108,46 @@
         <div class="left-side">
             <div class="login box">
                 <p> LOGIN </p>
-                <form action="#" method="POST">
+                <form id="loginForm" action="#" method="POST">
                     <div class="input-container">
-                        <input type="text" name="username" required placeholder="Username">
-                        <input type="password" name="password" required placeholder="Password">
+                        <input type="email" id="email" name="email" required placeholder="Email">
+                        <input type="password" id="password" name="password" required placeholder="Password">
                     </div>
                     <div class="action-container">
                         <button type="submit">Log In</button>
                         <a href="#">forgot password?</a>
                     </div>
                 </form>
+                <div id="errorMessage" class="error-message">
+                    Invalid email or password. Please try again.
+                </div>
             </div>
         </div>
         <div class="right-side">
             <img src="Unknown-1.png" alt="Drexel Logo">
         </div>
     </div>    
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+
+            // Get input values
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Retrieve user info from localStorage
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+            // Check if user exists and credentials match
+            if (userInfo && userInfo.email === email && userInfo.password === password) {
+                // Redirect to dashboard.html
+                window.location.href = '/dashboard';
+            } else {
+                // Show error message
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>

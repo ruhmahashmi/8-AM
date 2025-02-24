@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8AM</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+    
+        header {
+            background-color: #194161;
+            color: white;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            height: auto;
+            flex-wrap: wrap;
+        }
+
+        .left-side {
+            background-color: #FFC502;
+            color: yellow;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .right-side {
+            background-color: #07294E;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        img {
+            width: 500px;
+            height: 391px;
+        }
+
+        p {
+            font-size: 64px;
+            font-family: Arial, sans-serif;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            justify-content: flex-end;
+        }
+
+        .action-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        a {
+            color: white;
+            text-decoration: none;
+            width: 180px;
+            height: 39px;
+            align-self: flex-start;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: white;
+            color: black;
+            height: 40px;
+            width: 87px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        input {
+            height: 69px;
+            width: 432px;
+            border: none;
+            padding: 0 20px;
+        }
+
+        .confirmation-message {
+            display: none;
+            margin-top: 20px;
+            font-size: 24px;
+            color: green;
+        }
+
+        .login-button {
+            background-color: #07294E;
+            color: white;
+            height: 40px;
+            width: 87px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <header>
+    </header>
+    <div class="container">
+        <div class="left-side">
+            <div class="login box">
+                <p> Sign-Up </p>
+                <form id="signupForm" action="#" method="POST">
+                    <div class="input-container">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input
+                              type="email"
+                              class="form-control"
+                              id="email"
+                              name="email"
+                              placeholder="Enter email"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="firstName"
+                              name="firstName"
+                              placeholder="Enter first name"
+                            />
+                          </div>    
+                          <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="lastName"
+                              name="lastName"
+                              placeholder="Enter last name"
+                            />
+                          </div> 
+                          <div class="form-group">
+                            <label for="major">Major</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="major"
+                              name="major"
+                              placeholder="Major"
+                            />
+                          </div>
+                          <div class="form-group">
+                            <label for="minor">Minor</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="minor"
+                              name="minor"
+                              placeholder="Minor"
+                            />
+                          </div>
+                          <div class="form-group">
+                            <label for="year">Year</label>
+                            <select class="form-control" id="year" name="year">
+                              <option value="" disabled selected>Select your year</option>
+                              <option value="freshman">Freshman</option>
+                              <option value="sophomore">Sophomore</option>
+                              <option value="pre-junior">Pre-Junior</option>
+                              <option value="junior">Junior</option>
+                              <option value="senior">Senior</option>
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label for="co-op">Co-Op Cycle</label>
+                            <select class="form-control" id="co-op" name="co-op">
+                              <option value="" disabled selected>Co-Op Cycle</option>
+                              <option value="fall-winter">Fall-Winter</option>
+                              <option value="spring-summer">Spring-Summer</option>
+                            </select>
+                          </div>
+                          
+                          <div class="form-group">
+                            <label for="password1">Password</label>
+                            <input
+                              type="password"
+                              class="form-control"
+                              id="password1"
+                              name="password1"
+                              placeholder="Enter password"
+                            />
+                          </div>   
+                          <div class="form-group">
+                            <label for="password2">Password (Confirm)</label>
+                            <input
+                              type="password"
+                              class="form-control"
+                              id="password2"
+                              name="password2"
+                              placeholder="Confirm password"
+                            />
+                          </div>            
+                    </div>
+                    <div class="action-container">
+                      <a href="/login">
+                        <button type="button" class="login-button">Login</button>
+                    </a>
+                    
+                        <button type="submit">Submit</button>
+                    </div>
+                </form>
+                <div id="confirmationMessage" class="confirmation-message">
+                    Account created successfully!
+                </div>
+            </div>
+        </div>
+        <div class="right-side">
+            <img src="Unknown-1.png" alt="Drexel Logo">
+        </div>
+        
+    </div>    
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+
+            // Get form values
+            const email = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const major = document.getElementById('major').value;
+            const minor = document.getElementById('minor').value;
+            const year = document.getElementById('year').value;
+            const coOp = document.getElementById('co-op').value;
+            const password1 = document.getElementById('password1').value;
+            const password2 = document.getElementById('password2').value;
+
+            // Check if passwords match
+            if (password1 !== password2) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // Save user info to localStorage
+            const userInfo = {
+                email,
+                firstName,
+                lastName,
+                major,
+                minor,
+                year,
+                coOp,
+                password: password1
+            };
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+            // Display confirmation message
+            document.getElementById('confirmationMessage').style.display = 'block';
+
+            // Optionally, you can clear the form
+            document.getElementById('signupForm').reset();
+        });
+    </script>
+</body>
+</html>
