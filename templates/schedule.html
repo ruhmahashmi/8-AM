@@ -376,9 +376,9 @@
                 </div>
                 <div class="right">
                     <h2>Pick your Preferences</h2>
-                    <form>
+                    <form action="/save_schedule" method="POST">
                     <label for="startTime">Starting Time:</label>
-                    <select id="startTime" name="Start Time">
+                    <select id="startTime" name="startTime">
                         <option value="">Select Time</option>
                         <option value="8am">8:00AM</option>
                         <option value="9am">9:00AM</option> 
@@ -394,7 +394,7 @@
                         <option value="7pm">7:00PM</option>
                     </select>
                     <label for="endTime">Ending Time:</label>
-                    <select id="endTime" name="End Time">
+                    <select id="endTime" name="endTime">
                         <option value="">Select Time</option>
                         <option value="12pm">12:00PM</option>
                         <option value="1pm">1:00PM</option>
@@ -404,7 +404,7 @@
                         <option value="5pm">5:00PM</option>
                     </select> 
                     <label for="spacing">Class Spacing:</label>
-                    <select id="spacing" name="Class Spacing">
+                    <select id="spacing" name="spacing">
                         <option value="">Select Preference</option>
                         <option value="spaced-out">Spaced-Out</option>
                         <option value="back2back">Back To Back</option>

@@ -1,83 +1,56 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from os import path
+from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
 
 app = Flask(__name__)
 
-DB_NAME = 'users.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}' 
-app.config['SECRET_KEY'] = 'your_secret_key' 
+# Create a function to initialize the database
+def init_db():
+    conn = sqlite3.connect('schedule.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS schedule (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    course1 TEXT,
+                    course2 TEXT,
+                    course3 TEXT,
+                    course4 TEXT,
+                    course5 TEXT,
+                    course6 TEXT,
+                    start_time TEXT,
+                    end_time TEXT,
+                    spacing TEXT
+                )''')
+    conn.commit()
+    conn.close()
 
-db = SQLAlchemy(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), nullable=False)
-
-with app.app_context():
-    db.create_all()
+init_db()  # Initialize the database
 
 @app.route('/')
-def signup():
-    return render_template('sign-up.html')  # This renders sign-up.html
+def home():
+    return render_template('schedule.html')
 
-# Route to handle sign-up form submission
-@app.route('/register', methods=['POST'])
-def register():
-    if request.method == 'POST':
-        # Get form data
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
+@app.route('/save_schedule', methods=['POST'])
+def save_schedule():
+    # Get form data
+    course1 = request.form.get('course1')
+    course2 = request.form.get('course2')
+    course3 = request.form.get('course3')
+    course4 = request.form.get('course4')
+    course5 = request.form.get('course5')
+    course6 = request.form.get('course6')
+    start_time = request.form.get('startTime')
+    end_time = request.form.get('endTime')
+    spacing = request.form.get('spacing')
 
-        # Check if the username or email already exists
-        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
-        if existing_user:
-            flash('Username or email already exists!', 'error')
-            return redirect(url_for('signup'))
+    # Save to database
+    conn = sqlite3.connect('schedule.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO schedule (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+              (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing))
+    conn.commit()
+    conn.close()
 
-        # Create a new user
-        new_user = User(username=username, email=email, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
-
-@app.route('/login')
-def login():
-    return render_template('login.html') 
-
-@app.route('/login', methods=['POST'])
-def login_post():
-    if request.method == 'POST':
-        # Get form data
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        # Check if the user exists
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
-            flash('Login successful!', 'success')
-            return render_template('/dashboard')
-        else:
-            flash('Invalid username or password!', 'error')
-            return render_template('/login')
-
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')  
-
-@app.route('/profile')
-def profile():
-    return render_template('profile.html')  
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)
 
-def create_database(app):
-    if not path.exists('website/' + DB_NAME):
-        db.create_all(app=app)
-        print('Created Database!')
