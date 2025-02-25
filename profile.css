@@ -1,0 +1,101 @@
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #07294E, #0A3A6E);
+    color: white;
+    margin: 0;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+.top-nav {
+    background: #0A3A6E;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.logo {
+    height: 50px;
+}
+
+.nav-links a {
+    color: #FFC502;
+    text-decoration: none;
+    margin: 0 15px;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 70px);
+}
+
+.sidebar {
+    width: 250px;
+    background: #0A3A6E;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+}
+
+.sidebar h2 {
+    color: #FFC502;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    color: #FFC502;
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+.profile-main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #FFC502;
+}
+
+.profile-info h1 {
+    font-size: 26px;
+    color: #FFC502;
+}
+
+.profile-info p {
+    color: white;
+}
+
+button {
+    background: #FFC502;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #07294E;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #E6B800;
+    transform: scale(1.05);
+}
