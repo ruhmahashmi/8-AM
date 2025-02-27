@@ -1,8 +1,28 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, session
+import os
 import sqlite3
 from datetime import timedelta
 
+currentLocation = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(__name__)
+app.secret_key = 'secret'
+
+# Initialize the profile database
+def init_profile_db():
+    with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                            email TEXT PRIMARY KEY,
+                            firstName TEXT,
+                            lastName TEXT,
+                            password TEXT,
+                            major TEXT,
+                            minor TEXT,
+                            year TEXT,
+                            coOp TEXT
+                        )''')
+        conn.commit()
 
 # Initialize the schedule database
 def init_schedule_db():
@@ -50,36 +70,94 @@ def init_all_courses_db():
                     end_time TEXT,
                     day TEXT
                 )''')
-    # Insert mock data (only if the table is empty)
     c.execute("SELECT COUNT(*) FROM courses")
     if c.fetchone()[0] == 0:
         mock_courses = [
-            (1001, "CS 164", "Introduction to Computer Science", "9:00AM", "10:00AM", "Monday"),
-            (1002, "CS 171", "Computer Programming I", "10:00AM", "11:00AM", "Tuesday"),
-            (1003, "MATH 121", "Calculus I", "11:00AM", "12:00PM", "Wednesday"),
-            (1004, "PHYS 101", "Fundamentals of Physics I", "1:00PM", "2:00PM", "Thursday"),
+            (10001, 'CS 164', 'Introduction to Computer Science', '09:00', '10:00', 'Monday'),
+(10002, 'CS 164', 'Introduction to Computer Science', '14:00', '15:00', 'Wednesday'),
+(10003, 'CS 171', 'Computer Programming I', '10:00', '11:00', 'Tuesday'),
+(10004, 'CS 171', 'Computer Programming I', '13:00', '14:00', 'Friday'),
+(10005, 'CS 175', 'Advanced Computer Programming I', '11:00', '12:00', 'Thursday'),
+(10006, 'CS 172', 'Computer Programming II', '08:00', '09:00', 'Monday'),
+(10007, 'CS 172', 'Computer Programming II', '15:00', '16:00', 'Wednesday'),
+(10008, 'CS 172', 'Computer Programming II', '12:00', '13:00', 'Friday'),
+(10009, 'CS 260', 'Data Structures', '10:00', '11:00', 'Tuesday'),
+(10010, 'CS 260', 'Data Structures', '16:00', '17:00', 'Thursday'),
+(10011, 'CS 265', 'Advanced Programming Tools and Techniques', '13:00', '14:00', 'Monday'),
+(10012, 'CS 270', 'Mathematical Foundations of Computer Science', '09:00', '10:00', 'Wednesday'),
+(10013, 'CS 270', 'Mathematical Foundations of Computer Science', '14:00', '15:00', 'Friday'),
+(10014, 'CS 277', 'Algorithms and Analysis', '11:00', '12:00', 'Tuesday'),
+(10015, 'CS 281', 'Systems Architecture', '08:00', '09:00', 'Thursday'),
+(10016, 'CS 281', 'Systems Architecture', '15:00', '16:00', 'Monday'),
+(10017, 'CS 283', 'Systems Programming', '12:00', '13:00', 'Wednesday'),
+(10018, 'CS 360', 'Programming Language Concepts', '10:00', '11:00', 'Friday'),
+(10019, 'CS 360', 'Programming Language Concepts', '13:00', '14:00', 'Tuesday'),
+(10020, 'SE 181', 'Introduction to Software Engineering and Development', '09:00', '10:00', 'Thursday'),
+(10021, 'SE 201', 'Introduction to Software Engineering and Development', '14:00', '15:00', 'Monday'),
+(10022, 'SE 201', 'Introduction to Software Engineering and Development', '11:00', '12:00', 'Wednesday'),
+(10023, 'SE 310', 'Software Architecture I', '08:00', '09:00', 'Tuesday'),
+(10024, 'CI 101', 'Computing and Informatics Design I', '15:00', '16:00', 'Friday'),
+(10025, 'CI 102', 'Computing and Informatics Design II', '12:00', '13:00', 'Monday'),
+(10026, 'CI 102', 'Computing and Informatics Design II', '10:00', '11:00', 'Thursday'),
+(10027, 'CI 103', 'Computing and Informatics Design III', '13:00', '14:00', 'Wednesday'),
+(10028, 'CI 491', 'Senior Project I', '09:00', '10:00', 'Tuesday'),
+(10029, 'CI 491', 'Senior Project I', '16:00', '17:00', 'Friday'),
+(10030, 'CI 492', 'Senior Project II', '11:00', '12:00', 'Monday'),
+(10031, 'CI 493', 'Senior Project III', '14:00', '15:00', 'Thursday'),
+(10032, 'CI 493', 'Senior Project III', '08:00', '09:00', 'Wednesday'),
+(10033, 'MATH 121', 'Calculus I', '10:00', '11:00', 'Friday'),
+(10034, 'MATH 122', 'Calculus II', '12:00', '13:00', 'Tuesday'),
+(10035, 'MATH 122', 'Calculus II', '15:00', '16:00', 'Monday'),
+(10036, 'MATH 123', 'Calculus III', '09:00', '10:00', 'Thursday'),
+(10037, 'MATH 200', 'Multivariate Calculus', '13:00', '14:00', 'Wednesday'),
+(10038, 'MATH 200', 'Multivariate Calculus', '11:00', '12:00', 'Friday'),
+(10039, 'MATH 201', 'Linear Algebra', '08:00', '09:00', 'Tuesday'),
+(10040, 'MATH 221', 'Discrete Mathematics', '14:00', '15:00', 'Monday'),
+(10041, 'MATH 311', 'Probability and Statistics I', '10:00', '11:00', 'Wednesday'),
+(10042, 'MATH 311', 'Probability and Statistics I', '16:00', '17:00', 'Thursday'),
+(10043, 'BIO 131', 'Cells and Biomolecules', '12:00', '13:00', 'Friday'),
+(10044, 'BIO 134', 'Cells and Biomolecules Lab', '09:00', '10:00', 'Monday'),
+(10045, 'BIO 132', 'Genetics and Evolution', '11:00', '12:00', 'Tuesday'),
+(10046, 'BIO 135', 'Genetics and Evolution Lab', '13:00', '14:00', 'Thursday'),
+(10047, 'BIO 133', 'Physiology and Ecology', '08:00', '09:00', 'Wednesday'),
+(10048, 'BIO 136', 'Anatomy and Ecology Lab', '15:00', '16:00', 'Friday'),
+(10049, 'CHEM 101', 'General Chemistry I', '10:00', '11:00', 'Monday'),
+(10050, 'CHEM 101', 'General Chemistry I', '14:00', '15:00', 'Tuesday'),
+(10051, 'CHEM 102', 'General Chemistry II', '12:00', '13:00', 'Thursday'),
+(10052, 'CHEM 103', 'General Chemistry III', '09:00', '10:00', 'Wednesday'),
+(10053, 'PHYS 101', 'Fundamentals of Physics I', '11:00', '12:00', 'Friday'),
+(10054, 'PHYS 101', 'Fundamentals of Physics I', '13:00', '14:00', 'Monday'),
+(10055, 'PHYS 102', 'Fundamentals of Physics II', '08:00', '09:00', 'Tuesday'),
+(10056, 'PHYS 201', 'Fundamentals of Physics III', '15:00', '16:00', 'Thursday'),
+(10057, 'COM 230', 'Techniques of Speaking', '10:00', '11:00', 'Wednesday'),
+(10058, 'ENGL 101', 'Composition and Rhetoric I: Inquiry and Exploratory Research', '12:00', '13:00', 'Friday'),
+(10059, 'ENGL 111', 'English Composition I', '14:00', '15:00', 'Monday'),
+(10060, 'ENGL 102', 'Composition and Rhetoric II: Advanced Research and Evidence-Based Writing', '09:00', '10:00', 'Tuesday'),
+(10061, 'ENGL 112', 'English Composition II', '11:00', '12:00', 'Thursday'),
+(10062, 'ENGL 103', 'Composition and Rhetoric III: Themes and Genres', '13:00', '14:00', 'Wednesday'),
+(10063, 'ENGL 113', 'English Composition III', '08:00', '09:00', 'Friday'),
+(10064, 'PHIL 311', 'Ethics and Information Technology', '15:00', '16:00', 'Monday'),
+(10065, 'PHIL 311', 'Ethics and Information Technology', '10:00', '11:00', 'Tuesday'),
+(10066, 'UNIV CI101', 'The Drexel Experience', '12:00', '13:00', 'Thursday'),
+(10067, 'CI 120', 'CCI Transfer Student Seminar', '14:00', '15:00', 'Wednesday'),
+(10068, 'CIVC 101', 'Introduction to Civic Engagement', '09:00', '10:00', 'Friday'),
+(10069, 'COOP 101', 'Career Management and Professional Development', '11:00', '12:00', 'Monday'),
+(10070, 'COOP 101', 'Career Management and Professional Development', '13:00', '14:00', 'Tuesday'),
         ]
         c.executemany("INSERT INTO courses (crn, course_code, course_name, start_time, end_time, day) VALUES (?, ?, ?, ?, ?, ?)", mock_courses)
     conn.commit()
     conn.close()
 
-# Helper function to convert time strings (e.g., "9:00AM", "9am", "9:00 am") to minutes since midnight for comparison
+# Helper function to convert time strings to minutes
 def time_to_minutes(time_str):
     if not time_str:
         return None
-    
-    # Normalize the time string: remove spaces, ensure colon, and standardize case
     time_str = time_str.strip().lower().replace(" ", "").replace("am", "AM").replace("pm", "PM")
-    
-    # Handle formats like "9am", "9:00am", "9:00 AM", etc.
     if ':' not in time_str:
-        # Add default minutes if only hour is provided (e.g., "9am" -> "9:00AM")
-        if len(time_str) == 3:  # e.g., "9am"
+        if len(time_str) == 3:
             time_str = f"{time_str[0:1]}:00{time_str[1:]}"
-        elif len(time_str) == 4:  # e.g., "10am"
+        elif len(time_str) == 4:
             time_str = f"{time_str[0:2]}:00{time_str[2:]}"
-    
-    # Now parse the normalized time string
     if time_str.endswith('AM') and time_str != '12:00AM':
         hour, minute = map(int, time_str.replace('AM', '').split(':'))
     elif time_str.endswith('PM') and time_str != '12:00PM':
@@ -90,11 +168,10 @@ def time_to_minutes(time_str):
     elif time_str == '12:00PM':
         hour, minute = 12, 0
     else:
-        raise ValueError(f"Invalid time format after normalization: {time_str}")
-    
+        raise ValueError(f"Invalid time format: {time_str}")
     return hour * 60 + minute
 
-# Helper function to convert minutes back to time string (e.g., "9:00AM")
+# Helper function to convert minutes back to time string
 def minutes_to_time(minutes):
     if minutes is None:
         return None
@@ -102,23 +179,93 @@ def minutes_to_time(minutes):
     mins = minutes % 60
     period = "AM" if hours < 12 else "PM"
     if hours == 0:
-        hours = 12  # Midnight
+        hours = 12
     elif hours > 12:
         hours -= 12
     return f"{hours:02d}:{mins:02d}{period}"
 
 # Initialize all databases
+init_profile_db()
 init_schedule_db()
 init_filtered_courses_db()
 init_all_courses_db()
 
 @app.route('/')
 def home():
+    if 'email' in session:
+        return redirect('/profile')
+    return redirect('/signup')
+
+@app.route('/profile')
+def profile():
+    if 'email' not in session:
+        return redirect('/signup')
+    email = session['email']
+    with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as sqlconnection:
+        cursor = sqlconnection.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        if user:
+            user_data = {
+                'email': user[0], 'firstName': user[1], 'lastName': user[2],
+                'password': user[3], 'major': user[4], 'minor': user[5],
+                'year': user[6], 'coOp': user[7]
+            }
+            return render_template('profile.html', user=user_data)
+    return redirect('/login')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        try:
+            email = request.form['email']
+            password = request.form['password']
+        except KeyError as e:
+            return render_template('login.html', error=f"Missing field: {e.args[0]}")
+        with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as sqlconnection:
+            cursor = sqlconnection.cursor()
+            cursor.execute("SELECT * FROM users WHERE email = ? AND password = ?", (email, password))
+            user = cursor.fetchone()
+            if user:
+                session['email'] = email
+                return redirect('/profile')
+            return render_template('login.html', error="Invalid credentials")
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        try:
+            dUN = request.form['email']
+            dPW = request.form['password']
+            dFName = request.form['firstName']
+            dLName = request.form['lastName']
+            dMajor = request.form['major']
+            dMinor = request.form['minor']
+            dYear = request.form['year']
+            dCoOp = request.form['coOp']
+        except KeyError as e:
+            return render_template('signup.html', error=f"Missing field: {e.args[0]}")
+        try:
+            with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as sqlconnection:
+                cursor = sqlconnection.cursor()
+                cursor.execute("""
+                    INSERT INTO users (email, firstName, lastName, password, major, minor, year, coOp)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (dUN, dFName, dLName, dPW, dMajor, dMinor, dYear, dCoOp))
+                sqlconnection.commit()
+                session['email'] = dUN
+                return redirect('/profile')
+        except sqlite3.IntegrityError:
+            return render_template('signup.html', error="Email already exists")
+    return render_template('signup.html')
+
+@app.route('/schedule')
+def schedule():
     return render_template('schedule.html')
 
 @app.route('/save_schedule', methods=['POST'])
 def save_schedule():
-    # Get form data
     course1 = request.form.get('course1')
     course2 = request.form.get('course2')
     course3 = request.form.get('course3')
@@ -129,56 +276,41 @@ def save_schedule():
     end_time = request.form.get('endTime')
     spacing = request.form.get('spacing')
 
-    # Save to schedule.db
     conn = sqlite3.connect('schedule.db')
     c = conn.cursor()
     c.execute("INSERT INTO schedule (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
               (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing))
     conn.commit()
-    schedule_id = c.lastrowid  # Get the ID of the newly inserted row
+    schedule_id = c.lastrowid
     conn.close()
 
-    # Filter selected courses into filtered_courses.db based on time
     selected_courses = [course1, course2, course3, course4, course5, course6]
-    selected_courses = [course for course in selected_courses if course]  # Remove empty selections
+    selected_courses = [course for course in selected_courses if course]
 
     if selected_courses and start_time and end_time:
-        # Convert user-provided times to minutes for comparison
         user_start_minutes = time_to_minutes(start_time)
         user_end_minutes = time_to_minutes(end_time)
-
-        # Connect to all_courses.db and filtered_courses.db
         conn_all = sqlite3.connect('all_courses.db')
         conn_filtered = sqlite3.connect('filtered_courses.db')
         c_all = conn_all.cursor()
         c_filtered = conn_filtered.cursor()
-
-        # Clear previous filtered courses (optional)
         c_filtered.execute("DELETE FROM filtered_courses")
-
-        # Filter courses from all_courses.db based on course_code and time range
         placeholders = ','.join('?' * len(selected_courses))
         c_all.execute(f"SELECT crn, course_code, course_name, start_time, end_time, day FROM courses WHERE course_code IN ({placeholders})", selected_courses)
         all_course_data = c_all.fetchall()
-
-        # Filter courses based on time range (course start time must be >= user start time and course end time <= user end time)
         filtered_courses = []
         for crn, course_code, course_name, course_start, course_end, day in all_course_data:
             course_start_minutes = time_to_minutes(course_start)
             course_end_minutes = time_to_minutes(course_end)
             if (course_start_minutes >= user_start_minutes and course_end_minutes <= user_end_minutes):
                 filtered_courses.append((crn, course_code, course_name, course_start, course_end, day))
-
-        # Insert into filtered_courses.db
         if filtered_courses:
             c_filtered.executemany("INSERT INTO filtered_courses (crn, course_code, course_name, start_time, end_time, day) VALUES (?, ?, ?, ?, ?, ?)", filtered_courses)
-
         conn_all.commit()
         conn_filtered.commit()
         conn_all.close()
         conn_filtered.close()
 
-    # Redirect to generate the schedule
     return redirect(url_for('generate_schedule', schedule_id=schedule_id))
 
 @app.route('/generate_schedule')
@@ -187,7 +319,6 @@ def generate_schedule():
     if not schedule_id:
         return "No schedule ID provided", 400
 
-    # Fetch schedule details from schedule.db
     conn_schedule = sqlite3.connect('schedule.db')
     c_schedule = conn_schedule.cursor()
     c_schedule.execute("SELECT course1, course2, course3, course4, course5, course6, start_time, end_time, spacing FROM schedule WHERE id = ?", (schedule_id,))
@@ -199,12 +330,10 @@ def generate_schedule():
     course1, course2, course3, course4, course5, course6, start_time, end_time, spacing = schedule_data
     conn_schedule.close()
 
-    # Collect selected courses (remove None/empty)
     selected_courses = [c for c in [course1, course2, course3, course4, course5, course6] if c]
     if not selected_courses:
         return "No courses selected", 400
 
-    # Get filtered courses from filtered_courses.db
     conn_filtered = sqlite3.connect('filtered_courses.db')
     c_filtered = conn_filtered.cursor()
     placeholders = ','.join('?' * len(selected_courses))
@@ -215,61 +344,44 @@ def generate_schedule():
     if not courses:
         return "No matching courses found", 404
 
-    # Convert times to minutes for scheduling
     user_start_minutes = time_to_minutes(start_time)
     user_end_minutes = time_to_minutes(end_time)
-
-    # Available days (assuming Monday to Friday for simplicity)
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    schedule = {day: [] for day in days}  # Dictionary to store scheduled courses per day
+    schedule = {day: [] for day in days}
 
-    # Sort courses by duration (shortest first) to optimize scheduling
-    courses_with_duration = [
-        (crn, code, name, start, end, day, time_to_minutes(end) - time_to_minutes(start))
-        for crn, code, name, start, end, day in courses
-    ]
-    courses_with_duration.sort(key=lambda x: x[6])  # Sort by duration
+    courses_with_duration = [(crn, code, name, start, end, day, time_to_minutes(end) - time_to_minutes(start)) for crn, code, name, start, end, day in courses]
+    courses_with_duration.sort(key=lambda x: x[6])
 
-    # Schedule courses based on spacing preference
-    spacing_gap = 30 if spacing == "spaced-out" else 0  # 30 minutes gap for spaced-out, 0 for back-to-back
+    spacing_gap = 30 if spacing == "spaced-out" else 0
 
     for crn, code, name, start, end, day, _ in courses_with_duration:
         start_minutes = time_to_minutes(start)
         end_minutes = time_to_minutes(end)
         duration = end_minutes - start_minutes
-
-        # Find the first available day and time slot within user time frame
         scheduled = False
         for d in days:
             day_slots = schedule[d]
             can_schedule = True
             current_time = user_start_minutes
-
-            # Check if the course can fit in this day without overlapping
             for slot_start, slot_end in day_slots:
                 slot_start_minutes = time_to_minutes(slot_start)
                 slot_end_minutes = time_to_minutes(slot_end)
                 if current_time + duration + (spacing_gap if day_slots else 0) <= slot_start_minutes:
-                    current_time = slot_start_minutes + spacing_gap  # Add gap if spaced-out
+                    current_time = slot_start_minutes + spacing_gap
                 elif current_time < slot_end_minutes and current_time + duration > slot_start_minutes:
                     can_schedule = False
                     break
                 else:
                     current_time = max(current_time, slot_end_minutes) + spacing_gap
-
             if can_schedule and current_time + duration <= user_end_minutes:
-                # Schedule the course at the current time on this day
                 new_start = minutes_to_time(current_time)
                 new_end = minutes_to_time(current_time + duration)
                 schedule[d].append((new_start, new_end))
                 scheduled = True
                 break
-
         if not scheduled:
-            # If no day can accommodate the course, we could skip it or handle differently (e.g., return an error)
             continue
 
-    # Create a final schedule structure (e.g., list of tuples: (day, course_code, start_time, end_time))
     final_schedule = []
     for day in days:
         for start, end in schedule[day]:
@@ -278,11 +390,9 @@ def generate_schedule():
                     final_schedule.append((day, code, start, end))
                     break
 
-    # For now, print the schedule (you can render it in a template or store it in a new table)
     schedule_output = "Generated Schedule:\n"
     for day, course, start, end in final_schedule:
         schedule_output += f"{day}: {course} ({start} - {end})\n"
-
     return schedule_output
 
 if __name__ == '__main__':
