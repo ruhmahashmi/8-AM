@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Schedule - Drexel Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- pdf link-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -66,9 +69,73 @@
                 {% else %}
                     <p class="no-schedule">No schedule generated. Try adjusting your preferences!</p>
                 {% endif %}
-            </div>
-            <a href="{{ url_for('schedule') }}" class="regenerate-btn">Try Another Schedule</a>
-        </div>
+                <div class="button-container">
+                    <button onclick="exportToPDF()" class="export-btn">Export to PDF</button>
+                    <a href="{{ url_for('schedule') }}" class="regenerate-btn">Try Another Schedule</a>
+                </div>
     </div>
+    <script>
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Add title
+            doc.setFontSize(18);
+            doc.text("Your Fall Freshman Schedule", 14, 20);
+
+            // Pass schedule data from Flask to JavaScript
+            const schedule = {{ schedule | tojson }};
+
+            if (!schedule || schedule.length === 0) {
+                alert("No schedule to export!");
+                return;
+            }
+
+            // Prepare table data
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            const timeSlots = Array.from({ length: 10 }, (_, i) => {
+                const hour = (i + 8) % 12 || 12;
+                return `${hour}:00${i + 8 < 12 ? 'AM' : 'PM'}`;
+            });
+
+            // Build 2D array: rows are time slots, columns are days
+            const tableData = timeSlots.map(time => {
+                const row = [time];
+                days.forEach(day => {
+                    const events = schedule.filter(event => event[0] === day);
+                    let cellContent = '';
+                    events.forEach(event => {
+                        const startMinutes = timeToMinutes(event[3]);
+                        const slotStart = (timeSlots.indexOf(time) + 8) * 60;
+                        if (startMinutes >= slotStart && startMinutes < slotStart + 60) {
+                            cellContent = `${event[1]} (${event[3]}-${event[4]})`;
+                        }
+                    });
+                    row.push(cellContent);
+                });
+                return row;
+            });
+
+            // Add table to PDF
+            doc.autoTable({
+                head: [['Time', ...days]],
+                body: tableData,
+                startY: 30,
+                styles: { fontSize: 10, cellPadding: 2 },
+                headStyles: { fillColor: [0, 102, 204] }, // Drexel blue
+                alternateRowStyles: { fillColor: [240, 240, 240] },
+            });
+
+            // Save the PDF
+            doc.save("schedule.pdf");
+        }
+
+        // Helper function to convert time to minutes
+        function timeToMinutes(time) {
+            const [hour, min] = time.split(':');
+            const isPM = time.includes('PM');
+            return (parseInt(hour) % 12 + (isPM ? 12 : 0)) * 60 + parseInt(min.slice(0, 2));
+        }
+    </script>
 </body>
 </html>
