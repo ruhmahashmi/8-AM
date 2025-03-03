@@ -3,34 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drexel Dashboard</title>
-    <link rel="stylesheet" href="page2.css">
+    <title>Login - Drexel Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <div class="sidebar">
-            <img src="Unknown-1.png" alt="Drexel Logo" class="logo">
+            <img src="/static/drexel_logo.png" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
-                <li>My Courses</li>
-                <li>My Progress</li>
-                <li>Account Setting</li>
+                <li><a href="/signup">Sign Up</a></li>
             </ul>
         </div>
         <div class="main-content">
-            <nav class="navbar">
-                <span class="time">8 AM<a href="index.html"></a></span>
-                <ul class="nav-links">
-                    <li><a href="schedule.html">Schedule</a></li>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Courses</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><a href="profile.html">Profile</a></li>
-                </ul>
-            </nav>
-            <div class="center-content">
+            <h1>Login</h1>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <div class="form-container">
+                <form id="loginForm" action="/login" method="POST">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                    <button type="submit">Log In</button>
+                </form>
+                <p><a href="/signup">Don't have an account? Sign up</a></p>
             </div>
         </div>
     </div>
-    
 </body>
 </html>

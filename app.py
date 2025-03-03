@@ -1,154 +1,52 @@
-from flask import Flask, request, render_template, redirect, url_for, session
+from flask import Flask, request, render_template, redirect, url_for, flash, session
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
-import sqlite3
-from datetime import timedelta
+import logging
+import base64
 
-currentLocation = os.path.dirname(os.path.abspath(__file__))
-
+# Flask app setup
 app = Flask(__name__)
-app.secret_key = 'secret'
+app.secret_key = 'secret'  # Use os.urandom(24) in production
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), "drexel.db")}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+app.jinja_env.filters['b64encode'] = lambda x: base64.b64encode(x).decode('utf-8') if x else ''
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-# Initialize the profile database
-def init_profile_db():
-    with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                            email TEXT PRIMARY KEY,
-                            firstName TEXT,
-                            lastName TEXT,
-                            password TEXT,
-                            major TEXT,
-                            minor TEXT,
-                            year TEXT,
-                            coOp TEXT
-                        )''')
-        conn.commit()
+# Models
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    firstName = db.Column(db.String(150), nullable=False)
+    lastName = db.Column(db.String(150), nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+    major = db.Column(db.String(150), nullable=False)
+    minor = db.Column(db.String(150))
+    year = db.Column(db.String(50), nullable=False)
+    coOp = db.Column(db.String(50))
+    profilePic = db.Column(db.LargeBinary)
 
-# Initialize the schedule database
-def init_schedule_db():
-    conn = sqlite3.connect('schedule.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS schedule (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    course1 TEXT,
-                    course2 TEXT,
-                    course3 TEXT,
-                    course4 TEXT,
-                    course5 TEXT,
-                    course6 TEXT,
-                    start_time TEXT,
-                    end_time TEXT,
-                    spacing TEXT
-                )''')
-    conn.commit()
-    conn.close()
+    def get_id(self):
+        return str(self.id)
 
-# Initialize the filtered_courses database
-def init_filtered_courses_db():
-    conn = sqlite3.connect('filtered_courses.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS filtered_courses (
-                    crn INTEGER PRIMARY KEY,
-                    course_code TEXT,
-                    course_name TEXT,
-                    start_time TEXT,
-                    end_time TEXT,
-                    day TEXT
-                )''')
-    conn.commit()
-    conn.close()
+class Course(db.Model):
+    crn = db.Column(db.Integer, primary_key=True)
+    course_code = db.Column(db.String(50), nullable=False)
+    course_name = db.Column(db.String(150), nullable=False)
+    start_time = db.Column(db.String(10), nullable=False)
+    end_time = db.Column(db.String(10), nullable=False)
+    day = db.Column(db.String(10), nullable=False)
 
-# Initialize the all_courses database with mock data
-def init_all_courses_db():
-    conn = sqlite3.connect('all_courses.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS courses (
-                    crn INTEGER PRIMARY KEY,
-                    course_code TEXT UNIQUE,
-                    course_name TEXT,
-                    start_time TEXT,
-                    end_time TEXT,
-                    day TEXT
-                )''')
-    c.execute("SELECT COUNT(*) FROM courses")
-    if c.fetchone()[0] == 0:
-        mock_courses = [
-            (10001, 'CS 164', 'Introduction to Computer Science', '09:00', '10:00', 'Monday'),
-(10002, 'CS 164', 'Introduction to Computer Science', '14:00', '15:00', 'Wednesday'),
-(10003, 'CS 171', 'Computer Programming I', '10:00', '11:00', 'Tuesday'),
-(10004, 'CS 171', 'Computer Programming I', '13:00', '14:00', 'Friday'),
-(10005, 'CS 175', 'Advanced Computer Programming I', '11:00', '12:00', 'Thursday'),
-(10006, 'CS 172', 'Computer Programming II', '08:00', '09:00', 'Monday'),
-(10007, 'CS 172', 'Computer Programming II', '15:00', '16:00', 'Wednesday'),
-(10008, 'CS 172', 'Computer Programming II', '12:00', '13:00', 'Friday'),
-(10009, 'CS 260', 'Data Structures', '10:00', '11:00', 'Tuesday'),
-(10010, 'CS 260', 'Data Structures', '16:00', '17:00', 'Thursday'),
-(10011, 'CS 265', 'Advanced Programming Tools and Techniques', '13:00', '14:00', 'Monday'),
-(10012, 'CS 270', 'Mathematical Foundations of Computer Science', '09:00', '10:00', 'Wednesday'),
-(10013, 'CS 270', 'Mathematical Foundations of Computer Science', '14:00', '15:00', 'Friday'),
-(10014, 'CS 277', 'Algorithms and Analysis', '11:00', '12:00', 'Tuesday'),
-(10015, 'CS 281', 'Systems Architecture', '08:00', '09:00', 'Thursday'),
-(10016, 'CS 281', 'Systems Architecture', '15:00', '16:00', 'Monday'),
-(10017, 'CS 283', 'Systems Programming', '12:00', '13:00', 'Wednesday'),
-(10018, 'CS 360', 'Programming Language Concepts', '10:00', '11:00', 'Friday'),
-(10019, 'CS 360', 'Programming Language Concepts', '13:00', '14:00', 'Tuesday'),
-(10020, 'SE 181', 'Introduction to Software Engineering and Development', '09:00', '10:00', 'Thursday'),
-(10021, 'SE 201', 'Introduction to Software Engineering and Development', '14:00', '15:00', 'Monday'),
-(10022, 'SE 201', 'Introduction to Software Engineering and Development', '11:00', '12:00', 'Wednesday'),
-(10023, 'SE 310', 'Software Architecture I', '08:00', '09:00', 'Tuesday'),
-(10024, 'CI 101', 'Computing and Informatics Design I', '15:00', '16:00', 'Friday'),
-(10025, 'CI 102', 'Computing and Informatics Design II', '12:00', '13:00', 'Monday'),
-(10026, 'CI 102', 'Computing and Informatics Design II', '10:00', '11:00', 'Thursday'),
-(10027, 'CI 103', 'Computing and Informatics Design III', '13:00', '14:00', 'Wednesday'),
-(10028, 'CI 491', 'Senior Project I', '09:00', '10:00', 'Tuesday'),
-(10029, 'CI 491', 'Senior Project I', '16:00', '17:00', 'Friday'),
-(10030, 'CI 492', 'Senior Project II', '11:00', '12:00', 'Monday'),
-(10031, 'CI 493', 'Senior Project III', '14:00', '15:00', 'Thursday'),
-(10032, 'CI 493', 'Senior Project III', '08:00', '09:00', 'Wednesday'),
-(10033, 'MATH 121', 'Calculus I', '10:00', '11:00', 'Friday'),
-(10034, 'MATH 122', 'Calculus II', '12:00', '13:00', 'Tuesday'),
-(10035, 'MATH 122', 'Calculus II', '15:00', '16:00', 'Monday'),
-(10036, 'MATH 123', 'Calculus III', '09:00', '10:00', 'Thursday'),
-(10037, 'MATH 200', 'Multivariate Calculus', '13:00', '14:00', 'Wednesday'),
-(10038, 'MATH 200', 'Multivariate Calculus', '11:00', '12:00', 'Friday'),
-(10039, 'MATH 201', 'Linear Algebra', '08:00', '09:00', 'Tuesday'),
-(10040, 'MATH 221', 'Discrete Mathematics', '14:00', '15:00', 'Monday'),
-(10041, 'MATH 311', 'Probability and Statistics I', '10:00', '11:00', 'Wednesday'),
-(10042, 'MATH 311', 'Probability and Statistics I', '16:00', '17:00', 'Thursday'),
-(10043, 'BIO 131', 'Cells and Biomolecules', '12:00', '13:00', 'Friday'),
-(10044, 'BIO 134', 'Cells and Biomolecules Lab', '09:00', '10:00', 'Monday'),
-(10045, 'BIO 132', 'Genetics and Evolution', '11:00', '12:00', 'Tuesday'),
-(10046, 'BIO 135', 'Genetics and Evolution Lab', '13:00', '14:00', 'Thursday'),
-(10047, 'BIO 133', 'Physiology and Ecology', '08:00', '09:00', 'Wednesday'),
-(10048, 'BIO 136', 'Anatomy and Ecology Lab', '15:00', '16:00', 'Friday'),
-(10049, 'CHEM 101', 'General Chemistry I', '10:00', '11:00', 'Monday'),
-(10050, 'CHEM 101', 'General Chemistry I', '14:00', '15:00', 'Tuesday'),
-(10051, 'CHEM 102', 'General Chemistry II', '12:00', '13:00', 'Thursday'),
-(10052, 'CHEM 103', 'General Chemistry III', '09:00', '10:00', 'Wednesday'),
-(10053, 'PHYS 101', 'Fundamentals of Physics I', '11:00', '12:00', 'Friday'),
-(10054, 'PHYS 101', 'Fundamentals of Physics I', '13:00', '14:00', 'Monday'),
-(10055, 'PHYS 102', 'Fundamentals of Physics II', '08:00', '09:00', 'Tuesday'),
-(10056, 'PHYS 201', 'Fundamentals of Physics III', '15:00', '16:00', 'Thursday'),
-(10057, 'COM 230', 'Techniques of Speaking', '10:00', '11:00', 'Wednesday'),
-(10058, 'ENGL 101', 'Composition and Rhetoric I: Inquiry and Exploratory Research', '12:00', '13:00', 'Friday'),
-(10059, 'ENGL 111', 'English Composition I', '14:00', '15:00', 'Monday'),
-(10060, 'ENGL 102', 'Composition and Rhetoric II: Advanced Research and Evidence-Based Writing', '09:00', '10:00', 'Tuesday'),
-(10061, 'ENGL 112', 'English Composition II', '11:00', '12:00', 'Thursday'),
-(10062, 'ENGL 103', 'Composition and Rhetoric III: Themes and Genres', '13:00', '14:00', 'Wednesday'),
-(10063, 'ENGL 113', 'English Composition III', '08:00', '09:00', 'Friday'),
-(10064, 'PHIL 311', 'Ethics and Information Technology', '15:00', '16:00', 'Monday'),
-(10065, 'PHIL 311', 'Ethics and Information Technology', '10:00', '11:00', 'Tuesday'),
-(10066, 'UNIV CI101', 'The Drexel Experience', '12:00', '13:00', 'Thursday'),
-(10067, 'CI 120', 'CCI Transfer Student Seminar', '14:00', '15:00', 'Wednesday'),
-(10068, 'CIVC 101', 'Introduction to Civic Engagement', '09:00', '10:00', 'Friday'),
-(10069, 'COOP 101', 'Career Management and Professional Development', '11:00', '12:00', 'Monday'),
-(10070, 'COOP 101', 'Career Management and Professional Development', '13:00', '14:00', 'Tuesday'),
-        ]
-        c.executemany("INSERT INTO courses (crn, course_code, course_name, start_time, end_time, day) VALUES (?, ?, ?, ?, ?, ?)", mock_courses)
-    conn.commit()
-    conn.close()
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-# Helper function to convert time strings to minutes
+# Time conversion utilities
 def time_to_minutes(time_str):
     if not time_str:
         return None
@@ -171,7 +69,6 @@ def time_to_minutes(time_str):
         raise ValueError(f"Invalid time format: {time_str}")
     return hour * 60 + minute
 
-# Helper function to convert minutes back to time string
 def minutes_to_time(minutes):
     if minutes is None:
         return None
@@ -184,216 +81,237 @@ def minutes_to_time(minutes):
         hours -= 12
     return f"{hours:02d}:{mins:02d}{period}"
 
-# Initialize all databases
-init_profile_db()
-init_schedule_db()
-init_filtered_courses_db()
-init_all_courses_db()
+# Scheduler helper function
+def generate_schedule(courses_selected, start_time, end_time, spacing):
+    start_minutes = time_to_minutes(start_time)
+    end_minutes = time_to_minutes(end_time)
+    if start_minutes >= end_minutes:
+        return None  # Invalid time range
 
+    # Get all course instances
+    all_courses = Course.query.filter(Course.course_code.in_(courses_selected)).all()
+    if not all_courses:
+        return None
+
+    # Filter courses within time range
+    filtered_courses = []
+    for course in all_courses:
+        course_start = time_to_minutes(course.start_time)
+        course_end = time_to_minutes(course.end_time)
+        if course_start >= start_minutes and course_end <= end_minutes:
+            filtered_courses.append(course)
+
+    if len(filtered_courses) < len(courses_selected):
+        return None  # Not enough courses available
+
+    # Group by course code to ensure one instance per course
+    course_options = {}
+    for course in filtered_courses:
+        if course.course_code not in course_options:
+            course_options[course.course_code] = []
+        course_options[course.course_code].append(course)
+
+    # Build schedule with conflict checking
+    schedule = []
+    used_times = {}  # {day: [(start, end), ...]}
+
+    for course_code in courses_selected:
+        if course_code not in course_options:
+            continue
+        for course in course_options[course_code]:
+            start = time_to_minutes(course.start_time)
+            end = time_to_minutes(course.end_time)
+            day = course.day
+
+            # Check for conflicts
+            conflict = False
+            if day in used_times:
+                for used_start, used_end in used_times[day]:
+                    if not (end <= used_start or start >= used_end):
+                        conflict = True
+                        break
+            if conflict:
+                continue
+
+            # Check spacing
+            if spacing == "spaced-out" and day in used_times:
+                for used_start, used_end in used_times[day]:
+                    if abs(start - used_end) < 60 and abs(used_start - end) < 60:  # Less than 1-hour gap
+                        conflict = True
+                        break
+            if conflict:
+                continue
+
+            # Add to schedule
+            schedule.append((course.day, course.course_code, course.course_name, course.start_time, course.end_time))
+            if day not in used_times:
+                used_times[day] = []
+            used_times[day].append((start, end))
+            break  # Move to next course after adding one instance
+
+    return schedule if len(schedule) == len(courses_selected) else None
+
+# Routes
 @app.route('/')
 def home():
-    if 'email' in session:
-        return redirect('/profile')
-    return redirect('/signup')
-
-@app.route('/profile')
-def profile():
-    if 'email' not in session:
-        return redirect('/signup')
-    email = session['email']
-    with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as sqlconnection:
-        cursor = sqlconnection.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cursor.fetchone()
-        if user:
-            user_data = {
-                'email': user[0], 'firstName': user[1], 'lastName': user[2],
-                'password': user[3], 'major': user[4], 'minor': user[5],
-                'year': user[6], 'coOp': user[7]
-            }
-            return render_template('profile.html', user=user_data)
-    return redirect('/login')
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        try:
-            email = request.form['email']
-            password = request.form['password']
-        except KeyError as e:
-            return render_template('login.html', error=f"Missing field: {e.args[0]}")
-        with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as sqlconnection:
-            cursor = sqlconnection.cursor()
-            cursor.execute("SELECT * FROM users WHERE email = ? AND password = ?", (email, password))
-            user = cursor.fetchone()
-            if user:
-                session['email'] = email
-                return redirect('/profile')
-            return render_template('login.html', error="Invalid credentials")
-    return render_template('login.html')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        logger.debug(f"Login attempt: email={email}")
+        user = User.query.filter_by(email=email, password=password).first()  # TODO: Hash password comparison
+        if user:
+            login_user(user)
+            logger.debug(f"Login successful for {email}")
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            logger.debug("Login failed: Invalid credentials")
+            flash('Invalid email or password.', 'error')
+    return render_template('login.html', user=current_user)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     if request.method == 'POST':
+        email = request.form.get('email')
+        firstName = request.form.get('firstName')
+        lastName = request.form.get('lastName')
+        year = request.form.get('year')
+        coOp = request.form.get('coOp')
+        password = request.form.get('password1')
+        major = request.form.get('major')
+        minor = request.form.get('minor')
         try:
-            dUN = request.form['email']
-            dPW = request.form['password']
-            dFName = request.form['firstName']
-            dLName = request.form['lastName']
-            dMajor = request.form['major']
-            dMinor = request.form['minor']
-            dYear = request.form['year']
-            dCoOp = request.form['coOp']
-        except KeyError as e:
-            return render_template('signup.html', error=f"Missing field: {e.args[0]}")
-        try:
-            with sqlite3.connect(os.path.join(currentLocation, 'profile_user.db')) as sqlconnection:
-                cursor = sqlconnection.cursor()
-                cursor.execute("""
-                    INSERT INTO users (email, firstName, lastName, password, major, minor, year, coOp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (dUN, dFName, dLName, dPW, dMajor, dMinor, dYear, dCoOp))
-                sqlconnection.commit()
-                session['email'] = dUN
-                return redirect('/profile')
-        except sqlite3.IntegrityError:
-            return render_template('signup.html', error="Email already exists")
-    return render_template('signup.html')
+            new_user = User(email=email, firstName=firstName, lastName=lastName, year=year,
+                            coOp=coOp if coOp else None, password=password, major=major, minor=minor)
+            db.session.add(new_user)
+            db.session.commit()
+            logger.debug(f"Signup successful for {email}, coOp: {coOp}")
+            flash('Account created! Please log in.', 'success')
+            return redirect(url_for('login'))
+        except db.IntegrityError:
+            db.session.rollback()
+            logger.debug(f"Signup failed: Email {email} already exists")
+            flash('Email already exists.', 'error')
+    return render_template('signup.html', user=current_user)
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html', userName=current_user.firstName, user=current_user)
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        if 'profilePic' in request.files:
+            file = request.files['profilePic']
+            if file and file.filename != '':
+                current_user.profilePic = file.read()
+                db.session.commit()
+                flash('Profile picture updated!', 'success')
+        elif request.form.get('form_type') == 'profile':
+            current_user.email = request.form.get('email')
+            current_user.firstName = request.form.get('firstName')
+            current_user.lastName = request.form.get('lastName')
+            current_user.major = request.form.get('major')
+            current_user.minor = request.form.get('minor')
+            current_user.year = request.form.get('year')
+            current_user.coOp = request.form.get('coOp')
+            db.session.commit()
+            flash('Profile updated!', 'success')
+        return redirect(url_for('profile'))
+    return render_template('profile.html', user=current_user)
 
 @app.route('/schedule')
+@login_required
 def schedule():
-    return render_template('schedule.html')
+    return render_template('schedule.html', user=current_user)
 
 @app.route('/save_schedule', methods=['POST'])
+@login_required
 def save_schedule():
-    course1 = request.form.get('course1')
-    course2 = request.form.get('course2')
-    course3 = request.form.get('course3')
-    course4 = request.form.get('course4')
-    course5 = request.form.get('course5')
-    course6 = request.form.get('course6')
+    courses = [
+        request.form.get('course1'),
+        request.form.get('course2'),
+        request.form.get('course3'),
+        request.form.get('course4'),
+        request.form.get('course5')
+    ]
     start_time = request.form.get('startTime')
     end_time = request.form.get('endTime')
     spacing = request.form.get('spacing')
 
-    conn = sqlite3.connect('schedule.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO schedule (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-              (course1, course2, course3, course4, course5, course6, start_time, end_time, spacing))
-    conn.commit()
-    schedule_id = c.lastrowid
-    conn.close()
+    # Filter out empty selections
+    courses_selected = [course for course in courses if course]
+    if not courses_selected:
+        flash('Please select at least one course.', 'error')
+        return redirect(url_for('schedule'))
 
-    selected_courses = [course1, course2, course3, course4, course5, course6]
-    selected_courses = [course for course in selected_courses if course]
+    # Generate schedule
+    schedule = generate_schedule(courses_selected, start_time, end_time, spacing)
+    if schedule:
+        session['schedule'] = schedule
+        flash('Schedule generated successfully!', 'success')
+    else:
+        flash('Could not generate a conflict-free schedule with your preferences.', 'error')
+        return redirect(url_for('schedule'))
 
-    if selected_courses and start_time and end_time:
-        user_start_minutes = time_to_minutes(start_time)
-        user_end_minutes = time_to_minutes(end_time)
-        conn_all = sqlite3.connect('all_courses.db')
-        conn_filtered = sqlite3.connect('filtered_courses.db')
-        c_all = conn_all.cursor()
-        c_filtered = conn_filtered.cursor()
-        c_filtered.execute("DELETE FROM filtered_courses")
-        placeholders = ','.join('?' * len(selected_courses))
-        c_all.execute(f"SELECT crn, course_code, course_name, start_time, end_time, day FROM courses WHERE course_code IN ({placeholders})", selected_courses)
-        all_course_data = c_all.fetchall()
-        filtered_courses = []
-        for crn, course_code, course_name, course_start, course_end, day in all_course_data:
-            course_start_minutes = time_to_minutes(course_start)
-            course_end_minutes = time_to_minutes(course_end)
-            if (course_start_minutes >= user_start_minutes and course_end_minutes <= user_end_minutes):
-                filtered_courses.append((crn, course_code, course_name, course_start, course_end, day))
-        if filtered_courses:
-            c_filtered.executemany("INSERT INTO filtered_courses (crn, course_code, course_name, start_time, end_time, day) VALUES (?, ?, ?, ?, ?, ?)", filtered_courses)
-        conn_all.commit()
-        conn_filtered.commit()
-        conn_all.close()
-        conn_filtered.close()
+    return redirect(url_for('display_schedule'))  # Changed to 'display_schedule'
 
-    return redirect(url_for('generate_schedule', schedule_id=schedule_id))
+@app.route('/display_schedule')  # Renamed from '/generate_schedule'
+@login_required
+def display_schedule():  # Renamed from 'generate_schedule'
+    schedule = session.get('schedule', [])
+    if not schedule:
+        flash('No schedule generated. Please select courses.', 'error')
+        return redirect(url_for('schedule'))
+    return render_template('schedule_result.html', schedule=schedule, time_to_minutes=time_to_minutes)
 
-@app.route('/generate_schedule')
-def generate_schedule():
-    schedule_id = request.args.get('schedule_id')
-    if not schedule_id:
-        return "No schedule ID provided", 400
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out successfully!', 'success')
+    return redirect(url_for('login'))
 
-    conn_schedule = sqlite3.connect('schedule.db')
-    c_schedule = conn_schedule.cursor()
-    c_schedule.execute("SELECT course1, course2, course3, course4, course5, course6, start_time, end_time, spacing FROM schedule WHERE id = ?", (schedule_id,))
-    schedule_data = c_schedule.fetchone()
-    if not schedule_data:
-        conn_schedule.close()
-        return "Schedule not found", 404
-
-    course1, course2, course3, course4, course5, course6, start_time, end_time, spacing = schedule_data
-    conn_schedule.close()
-
-    selected_courses = [c for c in [course1, course2, course3, course4, course5, course6] if c]
-    if not selected_courses:
-        return "No courses selected", 400
-
-    conn_filtered = sqlite3.connect('filtered_courses.db')
-    c_filtered = conn_filtered.cursor()
-    placeholders = ','.join('?' * len(selected_courses))
-    c_filtered.execute(f"SELECT crn, course_code, course_name, start_time, end_time, day FROM filtered_courses WHERE course_code IN ({placeholders})", selected_courses)
-    courses = c_filtered.fetchall()
-    conn_filtered.close()
-
-    if not courses:
-        return "No matching courses found", 404
-
-    user_start_minutes = time_to_minutes(start_time)
-    user_end_minutes = time_to_minutes(end_time)
-    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    schedule = {day: [] for day in days}
-
-    courses_with_duration = [(crn, code, name, start, end, day, time_to_minutes(end) - time_to_minutes(start)) for crn, code, name, start, end, day in courses]
-    courses_with_duration.sort(key=lambda x: x[6])
-
-    spacing_gap = 30 if spacing == "spaced-out" else 0
-
-    for crn, code, name, start, end, day, _ in courses_with_duration:
-        start_minutes = time_to_minutes(start)
-        end_minutes = time_to_minutes(end)
-        duration = end_minutes - start_minutes
-        scheduled = False
-        for d in days:
-            day_slots = schedule[d]
-            can_schedule = True
-            current_time = user_start_minutes
-            for slot_start, slot_end in day_slots:
-                slot_start_minutes = time_to_minutes(slot_start)
-                slot_end_minutes = time_to_minutes(slot_end)
-                if current_time + duration + (spacing_gap if day_slots else 0) <= slot_start_minutes:
-                    current_time = slot_start_minutes + spacing_gap
-                elif current_time < slot_end_minutes and current_time + duration > slot_start_minutes:
-                    can_schedule = False
-                    break
-                else:
-                    current_time = max(current_time, slot_end_minutes) + spacing_gap
-            if can_schedule and current_time + duration <= user_end_minutes:
-                new_start = minutes_to_time(current_time)
-                new_end = minutes_to_time(current_time + duration)
-                schedule[d].append((new_start, new_end))
-                scheduled = True
-                break
-        if not scheduled:
-            continue
-
-    final_schedule = []
-    for day in days:
-        for start, end in schedule[day]:
-            for crn, code, name, _, _, d in courses:
-                if d == day and time_to_minutes(start) == time_to_minutes(courses_with_duration[0][3]) and time_to_minutes(end) == time_to_minutes(courses_with_duration[0][4]):
-                    final_schedule.append((day, code, start, end))
-                    break
-
-    schedule_output = "Generated Schedule:\n"
-    for day, course, start, end in final_schedule:
-        schedule_output += f"{day}: {course} ({start} - {end})\n"
-    return schedule_output
+# Initialize database
+def init_db():
+    with app.app_context():
+        db.create_all()
+        if Course.query.count() == 0:
+            mock_courses = [
+                (10001, 'CS 164', 'Intro to Computer Science', '08:00AM', '09:00AM', 'Monday'),
+                (10002, 'CS 164', 'Intro to Computer Science', '10:00AM', '11:00AM', 'Wednesday'),
+                (10003, 'CS 164', 'Intro to Computer Science', '02:00PM', '03:00PM', 'Friday'),
+                (10004, 'MATH 121', 'Calculus I', '09:00AM', '10:00AM', 'Tuesday'),
+                (10005, 'MATH 121', 'Calculus I', '11:00AM', '12:00PM', 'Thursday'),
+                (10006, 'MATH 121', 'Calculus I', '01:00PM', '02:00PM', 'Monday'),
+                (10007, 'ENGL 101', 'Composition and Rhetoric I', '10:00AM', '11:00AM', 'Monday'),
+                (10008, 'ENGL 101', 'Composition and Rhetoric I', '01:00PM', '02:00PM', 'Wednesday'),
+                (10009, 'ENGL 101', 'Composition and Rhetoric I', '03:00PM', '04:00PM', 'Friday'),
+                (10010, 'CHEM 101', 'General Chemistry I', '08:00AM', '09:00AM', 'Thursday'),
+                (10011, 'CHEM 101', 'General Chemistry I', '12:00PM', '01:00PM', 'Tuesday'),
+                (10012, 'CHEM 101', 'General Chemistry I', '02:00PM', '03:00PM', 'Wednesday'),
+                (10013, 'COOP 101', 'Career Management', '09:00AM', '10:00AM', 'Friday'),
+                (10014, 'COOP 101', 'Career Management', '11:00AM', '12:00PM', 'Monday'),
+                (10015, 'COOP 101', 'Career Management', '03:00PM', '04:00PM', 'Tuesday'),
+                (10016, 'UNIV 101', 'The Drexel Experience', '08:00AM', '09:00AM', 'Wednesday'),
+                (10017, 'UNIV 101', 'The Drexel Experience', '12:00PM', '01:00PM', 'Friday'),
+                (10018, 'UNIV 101', 'The Drexel Experience', '01:00PM', '02:00PM', 'Thursday')
+            ]
+            for course in mock_courses:
+                db.session.add(Course(crn=course[0], course_code=course[1], course_name=course[2],
+                                     start_time=course[3], end_time=course[4], day=course[5]))
+            db.session.commit()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    init_db()
+    app.run(debug=True, port=5000)
