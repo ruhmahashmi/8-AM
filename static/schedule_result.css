@@ -1,0 +1,224 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #07294E;
+    color: #FFD700;
+    overflow-x: hidden;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    border: 5px solid white;
+    box-shadow: 0 9px 8px rgba(0, 0, 0, 0.2);
+    margin: 20px;
+    border-radius: 20px;
+    background-color: #07294E;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #07294E;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-right: 5px solid white;
+    box-sizing: border-box;
+}
+
+.logo {
+    width: 215px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+}
+
+.sidebar-menu li {
+    margin: 20px 0;
+}
+
+.sidebar-menu a {
+    color: #FFD700;
+    text-decoration: none;
+    font-size: 1.2em;
+    transition: color 0.3s;
+}
+
+.sidebar-menu a:hover {
+    color: #FFFFFF;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    border-radius: 0 10px 10px 0;
+    background-color: #07294E;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid white;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+.time {
+    font-size: 3em;
+    font-weight: bold;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #FFD700;
+    font-size: 1.2em;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: #FFFFFF;
+}
+
+h1 {
+    text-align: center;
+    margin: 0 0 40px;
+    font-size: 2.5em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.schedule-container {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 1s ease-in-out;
+}
+
+.time-column {
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+}
+
+.time-header {
+    height: 60px;
+    background-color: #FFD700;
+    color: #07294E;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2px solid white;
+    border-radius: 10px 10px 0 0;
+}
+
+.time-slot {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 1.1em;
+}
+
+.days-container {
+    display: flex;
+    flex-grow: 1;
+}
+
+.day-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0 5px;
+}
+
+.day-header {
+    height: 60px;
+    background-color: #FFD700;
+    color: #07294E;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px 10px 0 0;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.day-slots {
+    position: relative;
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+}
+
+.slot {
+    height: 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.course-card {
+    position: absolute;
+    width: 90%;
+    left: 5%;
+    background: linear-gradient(135deg, #FFD700, #FFC107);
+    color: #07294E;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transform: translateY(-10px);
+    opacity: 0;
+    animation: slideIn 0.5s ease-out forwards;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.course-card:hover {
+    transform: translateY(-15px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.course-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.course-time {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

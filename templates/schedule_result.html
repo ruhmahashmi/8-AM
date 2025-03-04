@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Schedule - Drexel Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- pdf link-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="#">My Courses</a></li>
+                <li><a href="#">My Progress</a></li>
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <nav class="navbar">
+                <span class="time">8 AM</span>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    <li><a href="#">Courses</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+            <h1>Your Fall Freshman Schedule</h1>
+            <div id="scheduleContainer" class="schedule-container">
+                {% if schedule and schedule|length > 0 %}
+                    <div class="schedule-grid">
+                        <div class="time-column">
+                            <div class="time-header">Time</div>
+                            {% for i in range(8, 18) %}
+                                <div class="time-slot">{{ (i % 12) or 12 }}:00{{ 'AM' if i < 12 else 'PM' }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="days-container">
+                            {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+                                <div class="day-column">
+                                    <div class="day-header">{{ day }}</div>
+                                    <div class="day-slots">
+                                        {% for i in range(8, 18) %}
+                                            <div class="slot">
+                                                {% for event in schedule if event[0] == day %}
+                                                    {% set start_minutes = time_to_minutes(event[3]) %}
+                                                    {% set end_minutes = time_to_minutes(event[4]) %}
+                                                    {% set slot_start = i * 60 %}
+                                                    {% if start_minutes >= slot_start and start_minutes < slot_start + 60 %}
+                                                        <div class="course-card" style="height:{{ ((end_minutes - start_minutes) / 60 * 60) }}px; top:{{ ((start_minutes - slot_start) / 60 * 60) }}px;">
+                                                            <div class="course-title">{{ event[1] }}</div>
+                                                            <div class="course-time">{{ event[3] }} - {{ event[4] }}</div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="no-schedule">No schedule generated. Try adjusting your preferences!</p>
+                {% endif %}
+                <div class="button-container">
+                    <button onclick="exportToPDF()" class="export-btn">Export to PDF</button>
+                    <a href="{{ url_for('schedule') }}" class="regenerate-btn">Try Another Schedule</a>
+                </div>
+    </div>
+    <script>
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Add title
+            doc.setFontSize(18);
+            doc.text("Your Fall Freshman Schedule", 14, 20);
+
+            // Pass schedule data from Flask to JavaScript
+            const schedule = {{ schedule | tojson }};
+
+            if (!schedule || schedule.length === 0) {
+                alert("No schedule to export!");
+                return;
+            }
+
+            // Prepare table data
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            const timeSlots = Array.from({ length: 10 }, (_, i) => {
+                const hour = (i + 8) % 12 || 12;
+                return `${hour}:00${i + 8 < 12 ? 'AM' : 'PM'}`;
+            });
+
+            // Build 2D array: rows are time slots, columns are days
+            const tableData = timeSlots.map(time => {
+                const row = [time];
+                days.forEach(day => {
+                    const events = schedule.filter(event => event[0] === day);
+                    let cellContent = '';
+                    events.forEach(event => {
+                        const startMinutes = timeToMinutes(event[3]);
+                        const slotStart = (timeSlots.indexOf(time) + 8) * 60;
+                        if (startMinutes >= slotStart && startMinutes < slotStart + 60) {
+                            cellContent = `${event[1]} (${event[3]}-${event[4]})`;
+                        }
+                    });
+                    row.push(cellContent);
+                });
+                return row;
+            });
+
+            // Add table to PDF
+            doc.autoTable({
+                head: [['Time', ...days]],
+                body: tableData,
+                startY: 30,
+                styles: { fontSize: 10, cellPadding: 2 },
+                headStyles: { fillColor: [0, 102, 204] }, // Drexel blue
+                alternateRowStyles: { fillColor: [240, 240, 240] },
+            });
+
+            // Save the PDF
+            doc.save("schedule.pdf");
+        }
+
+        // Helper function to convert time to minutes
+        function timeToMinutes(time) {
+            const [hour, min] = time.split(':');
+            const isPM = time.includes('PM');
+            return (parseInt(hour) % 12 + (isPM ? 12 : 0)) * 60 + parseInt(min.slice(0, 2));
+        }
+    </script>
+</body>
+</html>
