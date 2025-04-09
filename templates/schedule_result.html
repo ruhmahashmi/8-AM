@@ -71,6 +71,13 @@
                 {% endif %}
                 <div class="button-container">
                     <button onclick="exportToPDF()" class="export-btn">Export to PDF</button>
+                    <div class="export-calendar-container">
+                        <button class="export-btn export-calendar-btn" aria-haspopup="true" aria-expanded="false">Export to Calendar</button>
+                        <div class="calendar-dropdown" role="menu">
+                            <a href="#" onclick="exportToICal()" role="menuitem">iCal/Outlook</a>
+                            <a href="#" onclick="exportToGoogle()" role="menuitem">Google Calendar</a>
+                        </div>
+                    </div>
                     <a href="{{ url_for('schedule') }}" class="regenerate-btn">Try Another Schedule</a>
                 </div>
     </div>

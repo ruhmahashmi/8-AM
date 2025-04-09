@@ -372,3 +372,77 @@ button:hover, .generate-btn:hover, .action-btn:hover {
 .profile-edit-form button {
     margin-right: 10px;
 }
+
+/* Button Container Adjustments */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Export Calendar Button and Dropdown */
+.export-calendar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #FFD700, #FFC107);
+    color: #07294E;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.export-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    min-width: 160px;
+    z-index: 10;
+}
+
+.calendar-dropdown a {
+    display: block;
+    padding: 10px 15px;
+    color: #07294E;
+    text-decoration: none;
+    font-size: 1em;
+    transition: background 0.3s;
+}
+
+.calendar-dropdown a:hover {
+    background: linear-gradient(135deg, #FFD700, #FFC107);
+    color: #07294E;
+}
+
+.export-calendar-container:hover .calendar-dropdown,
+.export-calendar-btn[aria-expanded="true"] + .calendar-dropdown {
+    display: block;
+}
+
+/* Accessibility Enhancements */
+.export-btn:focus {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+.calendar-dropdown a:focus {
+    outline: 2px solid #07294E;
+    background: linear-gradient(135deg, #FFD700, #FFC107);
+}
+
