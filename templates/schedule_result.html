@@ -74,38 +74,29 @@
                     <div class="export-calendar-container">
                         <button class="export-btn export-calendar-btn" aria-haspopup="true" aria-expanded="false">Export to Calendar</button>
                         <div class="calendar-dropdown" role="menu">
-                            <a href="#" onclick="exportToICal()" role="menuitem">iCal/Outlook</a>
+                             <a href="#" onclick="exportToICal()" role="menuitem">iCal/Outlook</a>
                             <a href="#" onclick="exportToGoogle()" role="menuitem">Google Calendar</a>
                         </div>
                     </div>
-                    <a href="{{ url_for('schedule') }}" class="regenerate-btn">Try Another Schedule</a>
+                    <button class="export-btn" id="try-another-schedule">Try Another Schedule</button>
                 </div>
     </div>
     <script>
         function exportToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
-            // Add title
             doc.setFontSize(18);
             doc.text("Your Fall Freshman Schedule", 14, 20);
-
-            // Pass schedule data from Flask to JavaScript
             const schedule = {{ schedule | tojson }};
-
             if (!schedule || schedule.length === 0) {
                 alert("No schedule to export!");
                 return;
             }
-
-            // Prepare table data
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
             const timeSlots = Array.from({ length: 10 }, (_, i) => {
                 const hour = (i + 8) % 12 || 12;
                 return `${hour}:00${i + 8 < 12 ? 'AM' : 'PM'}`;
             });
-
-            // Build 2D array: rows are time slots, columns are days
             const tableData = timeSlots.map(time => {
                 const row = [time];
                 days.forEach(day => {
@@ -122,26 +113,57 @@
                 });
                 return row;
             });
-
-            // Add table to PDF
             doc.autoTable({
                 head: [['Time', ...days]],
                 body: tableData,
                 startY: 30,
                 styles: { fontSize: 10, cellPadding: 2 },
-                headStyles: { fillColor: [0, 102, 204] }, // Drexel blue
+                headStyles: { fillColor: [0, 102, 204] },
                 alternateRowStyles: { fillColor: [240, 240, 240] },
             });
-
-            // Save the PDF
             doc.save("schedule.pdf");
         }
-
-        // Helper function to convert time to minutes
+    
         function timeToMinutes(time) {
             const [hour, min] = time.split(':');
             const isPM = time.includes('PM');
             return (parseInt(hour) % 12 + (isPM ? 12 : 0)) * 60 + parseInt(min.slice(0, 2));
+        }
+    
+        document.querySelector('.export-calendar-btn').addEventListener('click', function () {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !isExpanded);
+        });
+    
+        function exportToICal() {
+            const schedule = {{ schedule | tojson }};
+            if (!schedule || schedule.length === 0) {
+                alert("No schedule to export!");
+                return;
+            }
+            alert("Exporting to iCal/Outlook... (Implementation pending)");
+        }
+    
+        function exportToGoogle() {
+            const schedule = {{ schedule | tojson }};
+            if (!schedule || schedule.length === 0) {
+                alert("No schedule to export!");
+                return;
+            }
+            alert("Exporting to Google Calendar... (Implementation pending)");
+        }
+    
+        // Debug Try Another Schedule button
+        const tryAnotherButton = document.getElementById('try-another-schedule');
+        if (tryAnotherButton) {
+            tryAnotherButton.addEventListener('click', function () {
+                console.log('Try Another Schedule button clicked');
+                // Fallback to static URL if url_for fails
+                const scheduleUrl = "{{ url_for('schedule') | safe }}" || '/schedule';
+                window.location.href = scheduleUrl;
+            });
+        } else {
+            console.error('Try Another Schedule button not found in DOM');
         }
     </script>
 </body>

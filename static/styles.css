@@ -326,7 +326,6 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     to { transform: translateY(0); opacity: 1; }
 }
 
-/* Add to the end of styles.css */
 
 /* Profile-specific styles */
 .profile-container {
@@ -377,16 +376,13 @@ button:hover, .generate-btn:hover, .action-btn:hover {
 .button-container {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 20px;
     margin-top: 20px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
-/* Export Calendar Button and Dropdown */
-.export-calendar-container {
-    position: relative;
-    display: inline-block;
-}
-
+/* Uniform Button Styling */
 .export-btn {
     background: linear-gradient(135deg, #FFD700, #FFC107);
     color: #07294E;
@@ -397,6 +393,17 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     font-size: 1.1em;
     font-weight: bold;
     transition: transform 0.3s, box-shadow 0.3s;
+    width: 180px; /* Slightly larger for better fit */
+    height: 44px; /* Fixed height for uniformity */
+    line-height: 1.2; /* Consistent text alignment */
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Ellipsis for long text */
 }
 
 .export-btn:hover {
@@ -404,6 +411,19 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
+/* Export Calendar Button and Dropdown */
+.export-calendar-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.export-calendar-btn {
+    width: 180px; /* Match other buttons */
+    height: 44px; /* Match other buttons */
+}
+
+/* Dropdown styling */
 .calendar-dropdown {
     display: none;
     position: absolute;
@@ -412,7 +432,7 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 5px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    min-width: 160px;
+    min-width: 180px;
     z-index: 10;
 }
 
@@ -446,3 +466,7 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     background: linear-gradient(135deg, #FFD700, #FFC107);
 }
 
+/* Ensure regenerate-btn is hidden */
+.regenerate-btn {
+    display: none;
+}
