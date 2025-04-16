@@ -264,11 +264,11 @@ def save_schedule():
         flash('Could not generate a conflict-free schedule with your preferences.', 'error')
         return redirect(url_for('schedule'))
 
-    return redirect(url_for('display_schedule'))  # Changed to 'display_schedule'
+    return redirect(url_for('display_schedule'))
 
-@app.route('/display_schedule')  # Renamed from '/generate_schedule'
+@app.route('/display_schedule')
 @login_required
-def display_schedule():  # Renamed from 'generate_schedule'
+def display_schedule():
     schedule = session.get('schedule', [])
     if not schedule:
         flash('No schedule generated. Please select courses.', 'error')
@@ -358,6 +358,29 @@ def init_db():
                 (10056, 'SE 310', 'Software Architecture I', '10:00AM', '11:00AM', 'Wednesday'),
                 (10057, 'SE 310', 'Software Architecture I', '02:00PM', '03:00PM', 'Friday'),
 
+                (10018, 'UNIV 101', 'The Drexel Experience', '01:00PM', '02:00PM', 'Thursday'),
+                # New courses added below
+                (10019, 'COM 230', 'Techniques of Speaking', '09:00AM', '10:00AM', 'Monday'),
+                (10020, 'COM 230', 'Techniques of Speaking', '11:00AM', '12:00PM', 'Wednesday'),
+                (10021, 'COM 230', 'Techniques of Speaking', '02:00PM', '03:00PM', 'Friday'),
+                (10022, 'ENGL 111', 'English Composition I', '08:00AM', '09:00AM', 'Tuesday'),
+                (10023, 'ENGL 111', 'English Composition I', '10:00AM', '11:00AM', 'Thursday'),
+                (10024, 'ENGL 111', 'English Composition I', '01:00PM', '02:00PM', 'Friday'),
+                (10025, 'ENGL 112', 'Composition and Rhetoric II', '09:00AM', '10:00AM', 'Wednesday'),
+                (10026, 'ENGL 112', 'Composition and Rhetoric II', '12:00PM', '01:00PM', 'Monday'),
+                (10027, 'ENGL 112', 'Composition and Rhetoric II', '03:00PM', '04:00PM', 'Thursday'),
+                (10028, 'ENGL 113', 'Composition and Rhetoric III', '08:00AM', '09:00AM', 'Friday'),
+                (10029, 'ENGL 113', 'Composition and Rhetoric III', '11:00AM', '12:00PM', 'Tuesday'),
+                (10030, 'ENGL 113', 'Composition and Rhetoric III', '02:00PM', '03:00PM', 'Monday'),
+                (10031, 'PHIL 311', 'Ethics and Information Technology', '10:00AM', '11:00AM', 'Tuesday'),
+                (10032, 'PHIL 311', 'Ethics and Information Technology', '01:00PM', '02:00PM', 'Wednesday'),
+                (10033, 'PHIL 311', 'Ethics and Information Technology', '03:00PM', '04:00PM', 'Thursday'),
+                (10034, 'ENGL 102', 'Composition and Rhetoric II', '08:00AM', '09:00AM', 'Monday'),
+                (10035, 'ENGL 102', 'Composition and Rhetoric II', '10:00AM', '11:00AM', 'Wednesday'),
+                (10036, 'ENGL 102', 'Composition and Rhetoric II', '02:00PM', '03:00PM', 'Tuesday'),
+                (10037, 'ENGL 103', 'Composition and Rhetoric III', '09:00AM', '10:00AM', 'Thursday'),
+                (10038, 'ENGL 103', 'Composition and Rhetoric III', '12:00PM', '01:00PM', 'Wednesday'),
+                (10039, 'ENGL 103', 'Composition and Rhetoric III', '03:00PM', '04:00PM', 'Monday'),
             ]
             for course in mock_courses:
                 db.session.add(Course(crn=course[0], course_code=course[1], course_name=course[2],
@@ -366,4 +389,4 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)
