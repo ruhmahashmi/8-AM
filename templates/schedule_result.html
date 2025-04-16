@@ -82,6 +82,10 @@
                 </div>
     </div>
     <script>
+        const schedule = {{ schedule | tojson | safe }};
+        if (!Array.isArray(schedule)) {
+            console.error("Schedule is not an array:", schedule);
+        }
         function exportToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -153,18 +157,17 @@
             alert("Exporting to Google Calendar... (Implementation pending)");
         }
     
-        // Debug Try Another Schedule button
         const tryAnotherButton = document.getElementById('try-another-schedule');
-        if (tryAnotherButton) {
-            tryAnotherButton.addEventListener('click', function () {
-                console.log('Try Another Schedule button clicked');
-                // Fallback to static URL if url_for fails
-                const scheduleUrl = "{{ url_for('schedule') | safe }}" || '/schedule';
-                window.location.href = scheduleUrl;
-            });
-        } else {
-            console.error('Try Another Schedule button not found in DOM');
-        }
+    if (tryAnotherButton) {
+        tryAnotherButton.addEventListener('click', function () {
+            console.log('Try Another Schedule button clicked');
+            // Fallback to static URL if url_for fails
+            const scheduleUrl = "{{ url_for('schedule') | safe }}" || '/schedule';
+            window.location.href = scheduleUrl;
+        });
+    } else {
+        console.error('Try Another Schedule button not found in DOM');
+    }
     </script>
 </body>
 </html>
