@@ -306,7 +306,6 @@ def init_db():
                 (10016, 'UNIV 101', 'The Drexel Experience', '08:00AM', '09:00AM', 'Wednesday'),
                 (10017, 'UNIV 101', 'The Drexel Experience', '12:00PM', '01:00PM', 'Friday'),
                 (10018, 'UNIV 101', 'The Drexel Experience', '01:00PM', '02:00PM', 'Thursday'),
-                # New courses added below
                 (10019, 'COM 230', 'Techniques of Speaking', '09:00AM', '10:00AM', 'Monday'),
                 (10020, 'COM 230', 'Techniques of Speaking', '11:00AM', '12:00PM', 'Wednesday'),
                 (10021, 'COM 230', 'Techniques of Speaking', '02:00PM', '03:00PM', 'Friday'),
@@ -336,4 +335,4 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)
