@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Schedules - Drexel Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}" class="active">Saved Schedules</a></li>
+                <li><a href="#">My Courses</a></li>
+                <li><a href="#">My Progress</a></li>
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <nav class="navbar">
+                <span class="time">8 AM</span>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    <li><a href="#">Courses</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+            <h1>Saved Schedules</h1>
+            <div class="scheduler-container">
+                {% if schedules and schedules|length > 0 %}
+                    <div class="saved-schedules-list">
+                        {% for schedule in schedules %}
+                            <div class="schedule-card">
+                                <h2>Schedule #{{ schedule.id }}</h2>
+                                <p><strong>Courses:</strong> 
+                                    {{ [schedule.course1, schedule.course2, schedule.course3, schedule.course4, schedule.course5] | select('string') | join(', ') or 'None' }}
+                                </p>
+                                <p><strong>Time Preference:</strong> {{ schedule.start_time }} - {{ schedule.end_time }}</p>
+                                <p><strong>Spacing:</strong> {{ schedule.spacing | capitalize }}</p>
+                                <p><strong>Saved:</strong> {{ schedule.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                <a href="{{ url_for('display_schedule', schedule_id=schedule.id) }}" class="action-btn">View Schedule</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="no-schedule">No saved schedules. Generate a new schedule to get started!</p>
+                {% endif %}
+                <a href="{{ url_for('schedule') }}" class="action-btn generate-btn">Create New Schedule</a>
+            </div>
+        </div>
+    </div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93302fcb1ac1c991',t:'MTc0NTEwNTM5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
