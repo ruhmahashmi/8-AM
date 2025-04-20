@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule - Drexel Dashboard</title>
+    <title>Create Schedule - Drexel Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -11,209 +11,71 @@
         <div class="sidebar">
             <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
-                <li><a href="{{ url_for('schedule') }}">Schedule</a></li> <!-- Changed from 'views.schedule' -->
+                <li><a href="{{ url_for('schedule') }}" class="active">Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="#">My Courses</a></li>
                 <li><a href="#">My Progress</a></li>
-                <li><a href="{{ url_for('profile') }}">Account Settings</a></li> <!-- Changed from 'views.profile' -->
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
             </ul>
         </div>
         <div class="main-content">
             <nav class="navbar">
                 <span class="time">8 AM</span>
                 <ul class="nav-links">
-                    <li><a href="{{ url_for('dashboard') }}">Home</a></li> <!-- Changed from 'views.home' -->
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
                     <li><a href="#">Courses</a></li>
                     <li><a href="#">About</a></li>
-                    <li><a href="{{ url_for('profile') }}">Profile</a></li> <!-- Changed from 'views.profile' -->
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li> <!-- Changed from 'auth.logout' -->
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
             </nav>
-            <h1>Build Your Fall Freshman Schedule</h1>
+            <h1>Create Your Fall Freshman Schedule</h1>
             <div class="scheduler-container">
-                <form id="scheduleForm" action="{{ url_for('save_schedule') }}" method="POST"> <!-- Updated action -->
-                    <h2>Select Up to 5 Courses</h2>
+                <form action="{{ url_for('save_schedule') }}" method="POST" id="scheduleForm">
+                    <h2>Course Selection</h2>
                     <div class="course-selection">
-                        <label for="course1">Course 1:</label>
-                        <select id="course1" name="course1">
-                            <option value="">Select Course</option>
-                            <option value="CS 164">CS 164 - Intro to CS</option>
-                            <option value="MATH 121">MATH 121 - Calculus I</option>
-                            <option value="ENGL 101">ENGL 101 - Comp & Rhetoric I</option>
-                            <option value="ENGL 102">ENGL 102 - Comp & Rhetoric II</option>
-                            <option value="ENGL 103">ENGL 102 - Comp & Rhetoric III</option>
-                            <option value="CHEM 101">CHEM 101 - Gen Chemistry</option>
-                            <option value="COOP 101">COOP 101 - Career Mgmt</option>
-                            <option value="UNIV 101">UNIV 101 - Drexel Exp</option>
-                            <option value="CS 171">CS 171 - Computer Programming I</option>
-                            <option value="CS 175">CS 175 - Advanced Computer Programming I</option>
-                            <option value="CS 172">CS 172 - Computer Programming II</option>
-                            <option value="CS 260">CS 260 - Data Structures</option>
-                            <option value="CS 265">CS 265 - Advanced Programming Tools and Techniques</option>
-                            <option value="CS 270">CS 270 - Mathematical Foundations of Computer Science</option>
-                            <option value="CS 277">CS 277 - Algorithms and Analysis</option>
-                            <option value="CS 281">CS 281 - Systems Architecture</option>
-                            <option value="CS 283">CS 283 - Systems Programming</option>
-                            <option value="CS 360">CS 360 - Programming Language Concepts</option>
-                            <option value="SE 181">SE 181 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 201">SE 201 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 310">SE 310 - Software Architecture I</option>
-                            <option value="COM 230">COM 230 - Techniques of Speaking</option>
-                            <option value="ENGL 111">ENGL 111 - English Composition I</option>
-                            <option value="ENGL 112">ENGL 112 - English Composition II</option>
-                            <option value="ENGL 113">ENGL 113 - English Composition III</option>
-                            <option value="PHIL 311">PHIL 311 - Ethics & IT</option>
-
-
-                        </select>
-                        <label for="course2">Course 2:</label>
-                        <select id="course2" name="course2">
-                            <option value="">Select Course</option>
-                            <option value="CS 164">CS 164 - Intro to CS</option>
-                            <option value="MATH 121">MATH 121 - Calculus I</option>
-                            <option value="ENGL 101">ENGL 101 - Comp & Rhetoric I</option>
-                            <option value="ENGL 102">ENGL 102 - Comp & Rhetoric II</option>
-                            <option value="ENGL 103">ENGL 102 - Comp & Rhetoric III</option>
-                            <option value="CHEM 101">CHEM 101 - Gen Chemistry</option>
-                            <option value="COOP 101">COOP 101 - Career Mgmt</option>
-                            <option value="UNIV 101">UNIV 101 - Drexel Exp</option>
-                            <option value="CS 171">CS 171 - Computer Programming I</option>
-                            <option value="CS 175">CS 175 - Advanced Computer Programming I</option>
-                            <option value="CS 172">CS 172 - Computer Programming II</option>
-                            <option value="CS 260">CS 260 - Data Structures</option>
-                            <option value="CS 265">CS 265 - Advanced Programming Tools and Techniques</option>
-                            <option value="CS 270">CS 270 - Mathematical Foundations of Computer Science</option>
-                            <option value="CS 277">CS 277 - Algorithms and Analysis</option>
-                            <option value="CS 281">CS 281 - Systems Architecture</option>
-                            <option value="CS 283">CS 283 - Systems Programming</option>
-                            <option value="CS 360">CS 360 - Programming Language Concepts</option>
-                            <option value="SE 181">SE 181 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 201">SE 201 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 310">SE 310 - Software Architecture I</option>
-                            <option value="COM 230">COM 230 - Techniques of Speaking</option>
-                            <option value="ENGL 111">ENGL 111 - English Composition I</option>
-                            <option value="ENGL 112">ENGL 112 - English Composition II</option>
-                            <option value="ENGL 113">ENGL 113 - English Composition III</option>
-                            <option value="PHIL 311">PHIL 311 - Ethics & IT</option>
-                        </select>
-                        <label for="course3">Course 3:</label>
-                        <select id="course3" name="course3">
-                            <option value="">Select Course</option>
-                            <option value="CS 164">CS 164 - Intro to CS</option>
-                            <option value="MATH 121">MATH 121 - Calculus I</option>
-                            <option value="ENGL 101">ENGL 101 - Comp & Rhetoric I</option>
-                            <option value="ENGL 102">ENGL 102 - Comp & Rhetoric II</option>
-                            <option value="ENGL 103">ENGL 102 - Comp & Rhetoric III</option>
-                            <option value="CHEM 101">CHEM 101 - Gen Chemistry</option>
-                            <option value="COOP 101">COOP 101 - Career Mgmt</option>
-                            <option value="UNIV 101">UNIV 101 - Drexel Exp</option>
-                            <option value="COM 230">COM 230 - Techniques of Speaking</option>
-                            <option value="ENGL 111">ENGL 111 - English Composition I</option>
-                            <option value="ENGL 112">ENGL 112 - English Composition II</option>
-                            <option value="ENGL 113">ENGL 113 - English Composition III</option>
-                            <option value="PHIL 311">PHIL 311 - Ethics & IT</option>
-                            <option value="CS 171">CS 171 - Computer Programming I</option>
-                            <option value="CS 175">CS 175 - Advanced Computer Programming I</option>
-                            <option value="CS 172">CS 172 - Computer Programming II</option>
-                            <option value="CS 260">CS 260 - Data Structures</option>
-                            <option value="CS 265">CS 265 - Advanced Programming Tools and Techniques</option>
-                            <option value="CS 270">CS 270 - Mathematical Foundations of Computer Science</option>
-                            <option value="CS 277">CS 277 - Algorithms and Analysis</option>
-                            <option value="CS 281">CS 281 - Systems Architecture</option>
-                            <option value="CS 283">CS 283 - Systems Programming</option>
-                            <option value="CS 360">CS 360 - Programming Language Concepts</option>
-                            <option value="SE 181">SE 181 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 201">SE 201 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 310">SE 310 - Software Architecture I</option>
-                        </select>
-                        <label for="course4">Course 4:</label>
-                        <select id="course4" name="course4">
-                            <option value="">Select Course</option>
-                            <option value="CS 164">CS 164 - Intro to CS</option>
-                            <option value="MATH 121">MATH 121 - Calculus I</option>
-                            <option value="ENGL 101">ENGL 101 - Comp & Rhetoric I</option>
-                            <option value="ENGL 102">ENGL 102 - Comp & Rhetoric II</option>
-                            <option value="ENGL 103">ENGL 102 - Comp & Rhetoric III</option>
-                            <option value="CHEM 101">CHEM 101 - Gen Chemistry</option>
-                            <option value="COOP 101">COOP 101 - Career Mgmt</option>
-                            <option value="UNIV 101">UNIV 101 - Drexel Exp</option>
-                            <option value="COM 230">COM 230 - Techniques of Speaking</option>
-                            <option value="ENGL 111">ENGL 111 - English Composition I</option>
-                            <option value="ENGL 112">ENGL 112 - English Composition II</option>
-                            <option value="ENGL 113">ENGL 113 - English Composition III</option>
-                            <option value="PHIL 311">PHIL 311 - Ethics & IT</option>
-                            <option value="CS 171">CS 171 - Computer Programming I</option>
-                            <option value="CS 175">CS 175 - Advanced Computer Programming I</option>
-                            <option value="CS 172">CS 172 - Computer Programming II</option>
-                            <option value="CS 260">CS 260 - Data Structures</option>
-                            <option value="CS 265">CS 265 - Advanced Programming Tools and Techniques</option>
-                            <option value="CS 270">CS 270 - Mathematical Foundations of Computer Science</option>
-                            <option value="CS 277">CS 277 - Algorithms and Analysis</option>
-                            <option value="CS 281">CS 281 - Systems Architecture</option>
-                            <option value="CS 283">CS 283 - Systems Programming</option>
-                            <option value="CS 360">CS 360 - Programming Language Concepts</option>
-                            <option value="SE 181">SE 181 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 201">SE 201 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 310">SE 310 - Software Architecture I</option>
-                        </select>
-                        <label for="course5">Course 5:</label>
-                        <select id="course5" name="course5">
-                            <option value="">Select Course</option>
-                            <option value="CS 164">CS 164 - Intro to CS</option>
-                            <option value="MATH 121">MATH 121 - Calculus I</option>
-                            <option value="ENGL 101">ENGL 101 - Comp & Rhetoric I</option>
-                            <option value="ENGL 102">ENGL 102 - Comp & Rhetoric II</option>
-                            <option value="ENGL 103">ENGL 102 - Comp & Rhetoric III</option>
-                            <option value="CHEM 101">CHEM 101 - Gen Chemistry</option>
-                            <option value="COOP 101">COOP 101 - Career Mgmt</option>
-                            <option value="UNIV 101">UNIV 101 - Drexel Exp</option>
-                            <option value="CS 171">CS 171 - Computer Programming I</option>
-                            <option value="CS 175">CS 175 - Advanced Computer Programming I</option>
-                            <option value="CS 172">CS 172 - Computer Programming II</option>
-                            <option value="CS 260">CS 260 - Data Structures</option>
-                            <option value="CS 265">CS 265 - Advanced Programming Tools and Techniques</option>
-                            <option value="CS 270">CS 270 - Mathematical Foundations of Computer Science</option>
-                            <option value="CS 277">CS 277 - Algorithms and Analysis</option>
-                            <option value="CS 281">CS 281 - Systems Architecture</option>
-                            <option value="CS 283">CS 283 - Systems Programming</option>
-                            <option value="CS 360">CS 360 - Programming Language Concepts</option>
-                            <option value="SE 181">SE 181 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 201">SE 201 - Introduction to Software Engineering and Development</option>
-                            <option value="SE 310">SE 310 - Software Architecture I</option>
-                            <option value="COM 230">COM 230 - Techniques of Speaking</option>
-                            <option value="ENGL 111">ENGL 111 - English Composition I</option>
-                            <option value="ENGL 112">ENGL 112 - English Composition II</option>
-                            <option value="ENGL 113">ENGL 113 - English Composition III</option>
-                            <option value="PHIL 311">PHIL 311 - Ethics & IT</option>
-                        </select>
+                        {% for i in range(1, 6) %}
+                            <label for="course{{ i }}">Course {{ i }}</label>
+                            <select name="course{{ i }}" id="course{{ i }}">
+                                <option value="">Select a course</option>
+                                {% for course in courses %}
+                                    <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endfor %}
                     </div>
-                    <h2>Your Preferences</h2>
-                    <label for="startTime">Earliest Start Time:</label>
-                    <select id="startTime" name="startTime">
-                        <option value="8:00AM">8:00 AM</option>
-                        <option value="9:00AM">9:00 AM</option>
+                    <h2>Preferences</h2>
+                    <label for="startTime">Preferred Start Time</label>
+                    <select name="startTime" id="startTime" required>
+                        <option value="08:00AM">8:00 AM</option>
+                        <option value="09:00AM">9:00 AM</option>
                         <option value="10:00AM">10:00 AM</option>
                         <option value="11:00AM">11:00 AM</option>
                         <option value="12:00PM">12:00 PM</option>
                     </select>
-                    <label for="endTime">Latest End Time:</label>
-                    <select id="endTime" name="endTime">
+                    <label for="endTime">Preferred End Time</label>
+                    <select name="endTime" id="endTime" required>
                         <option value="12:00PM">12:00 PM</option>
-                        <option value="1:00PM">1:00 PM</option>
-                        <option value="2:00PM">2:00 PM</option>
-                        <option value="3:00PM">3:00 PM</option>
-                        <option value="4:00PM">4:00 PM</option>
-                        <option value="5:00PM">5:00 PM</option>
+                        <option value="01:00PM">1:00 PM</option>
+                        <option value="02:00PM">2:00 PM</option>
+                        <option value="03:00PM">3:00 PM</option>
+                        <option value="04:00PM">4:00 PM</option>
                     </select>
-                    <label for="spacing">Class Spacing Preference:</label>
-                    <select id="spacing" name="spacing">
-                        <option value="spaced-out">Spaced-Out (1 hr gap)</option>
-                        <option value="back2back">Back-to-Back (No gap)</option>
-                        <option value="flexible">Flexible (Any)</option>
+                    <label for="spacing">Course Spacing</label>
+                    <select name="spacing" id="spacing">
+                        <option value="compact">Compact</option>
+                        <option value="spaced-out">Spaced Out</option>
                     </select>
-                    <button type="submit" class="generate-button">Generate Your Schedule</button>
+                    <button type="submit" class="generate-btn">Generate Schedule</button>
                 </form>
             </div>
         </div>
     </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93302eb72d886fe6',t:'MTc0NTEwNTM1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>
+        document.getElementById('scheduleForm').addEventListener('submit', function() {
+            const formData = new FormData(this);
+            console.log('Form submitted with data:', Object.fromEntries(formData));
+        });
+    </script>
+</body>
 </html>

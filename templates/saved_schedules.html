@@ -42,7 +42,12 @@
                                 <p><strong>Time Preference:</strong> {{ schedule.start_time }} - {{ schedule.end_time }}</p>
                                 <p><strong>Spacing:</strong> {{ schedule.spacing | capitalize }}</p>
                                 <p><strong>Saved:</strong> {{ schedule.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                                <a href="{{ url_for('display_schedule', schedule_id=schedule.id) }}" class="action-btn">View Schedule</a>
+                                <div class="schedule-actions">
+                                    <a href="{{ url_for('display_schedule', schedule_id=schedule.id) }}" class="action-btn">View Schedule</a>
+                                    <form action="{{ url_for('delete_schedule', schedule_id=schedule.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="action-btn delete-btn" onclick="return confirm('Are you sure you want to delete Schedule #{{ schedule.id }}?');">Delete</button>
+                                    </form>
+                                </div>
                             </div>
                         {% endfor %}
                     </div>
@@ -53,5 +58,5 @@
             </div>
         </div>
     </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93302fcb1ac1c991',t:'MTc0NTEwNTM5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

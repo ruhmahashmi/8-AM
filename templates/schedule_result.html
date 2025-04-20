@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Schedule - Drexel Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <!-- pdf link-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -15,6 +14,7 @@
             <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="#">My Courses</a></li>
                 <li><a href="#">My Progress</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
@@ -66,36 +66,81 @@
                             {% endfor %}
                         </div>
                     </div>
+                    <div class="save-confirmation" id="saveConfirmation" style="display: none;">
+                        <p id="saveMessage"></p>
+                    </div>
                 {% else %}
                     <p class="no-schedule">No schedule generated. Try adjusting your preferences!</p>
                 {% endif %}
                 <div class="button-container">
+                    {% if schedule and schedule|length > 0 %}
+                        <button onclick="saveSchedule()" class="export-btn save-btn">Save this Schedule</button>
+                    {% endif %}
                     <button onclick="exportToPDF()" class="export-btn">Export to PDF</button>
                     <div class="export-calendar-container">
                         <button class="export-btn export-calendar-btn" aria-haspopup="true" aria-expanded="false">Export to Calendar</button>
                         <div class="calendar-dropdown" role="menu">
-                             <a href="#" onclick="exportToICal()" role="menuitem">iCal/Outlook</a>
-                            <a href="#" onclick="exportToGoogle()" role="menuitem">Google Calendar</a>
+                            <a href="#" onclick="exportToICal(); return false;" role="menuitem">iCal/Outlook</a>
+                            <a href="#" onclick="exportToGoogle(); return false;" role="menuitem">Google Calendar</a>
                         </div>
                     </div>
                     <button class="export-btn" id="try-another-schedule">Try Another Schedule</button>
                 </div>
+            </div>
+        </div>
     </div>
     <script>
         const schedule = {{ schedule | tojson | safe }};
-        if (!Array.isArray(schedule)) {
-            console.error("Schedule is not an array:", schedule);
+        if (!Array.isArray(schedule) || schedule.length === 0) {
+            console.warn("Schedule is empty or invalid:", schedule);
         }
+
+        async function saveSchedule() {
+            try {
+                console.log('Fetching URL:', '{{ url_for('save_current_schedule') }}');
+                const response = await fetch('{{ url_for('save_current_schedule') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const result = await response.json();
+                const saveConfirmation = document.getElementById('saveConfirmation');
+                const saveMessage = document.getElementById('saveMessage');
+                saveMessage.textContent = result.message;
+                saveConfirmation.style.display = 'block';
+                setTimeout(() => {
+                    saveConfirmation.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                console.error('Error saving schedule:', error);
+                const saveConfirmation = document.getElementById('saveConfirmation');
+                const saveMessage = document.getElementById('saveMessage');
+                saveMessage.textContent = 'Error saving schedule. Please try again.';
+                saveConfirmation.style.display = 'block';
+                setTimeout(() => {
+                    saveConfirmation.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function timeToMinutes(time) {
+            if (!time) return 0;
+            const [hour, min] = time.split(':');
+            const isPM = time.includes('PM');
+            return (parseInt(hour) % 12 + (isPM ? 12 : 0)) * 60 + parseInt(min.slice(0, 2));
+        }
+
         function exportToPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.text("Your Fall Freshman Schedule", 14, 20);
-            const schedule = {{ schedule | tojson }};
             if (!schedule || schedule.length === 0) {
                 alert("No schedule to export!");
                 return;
             }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text("Your Fall Freshman Schedule", 14, 20);
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
             const timeSlots = Array.from({ length: 10 }, (_, i) => {
                 const hour = (i + 8) % 12 || 12;
@@ -127,47 +172,104 @@
             });
             doc.save("schedule.pdf");
         }
-    
-        function timeToMinutes(time) {
-            const [hour, min] = time.split(':');
-            const isPM = time.includes('PM');
-            return (parseInt(hour) % 12 + (isPM ? 12 : 0)) * 60 + parseInt(min.slice(0, 2));
+
+        function exportToICal() {
+            if (!schedule || schedule.length === 0) {
+                alert("No schedule to export!");
+                return;
+            }
+            const cal = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//Drexel Dashboard//EN",
+                "CALSCALE:GREGORIAN",
+            ];
+            const now = new Date();
+            const termStart = new Date(now.getFullYear(), 8, 1);
+            schedule.forEach(event => {
+                const [day, code, name, startTime, endTime] = event;
+                const dayIndex = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].indexOf(day);
+                if (dayIndex === -1) return;
+                const eventDate = new Date(termStart);
+                eventDate.setDate(termStart.getDate() + ((dayIndex + 1) % 7));
+                const startMinutes = timeToMinutes(startTime);
+                const endMinutes = timeToMinutes(endTime);
+                const startDateTime = new Date(eventDate);
+                startDateTime.setHours(Math.floor(startMinutes / 60), startMinutes % 60);
+                const endDateTime = new Date(eventDate);
+                endDateTime.setHours(Math.floor(endMinutes / 60), endMinutes % 60);
+                const formatDate = dt => dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                cal.push(
+                    "BEGIN:VEVENT",
+                    `DTSTART:${formatDate(startDateTime)}`,
+                    `DTEND:${formatDate(endDateTime)}`,
+                    `RRULE:FREQ=WEEKLY;UNTIL=${new Date(now.getFullYear(), 11, 15).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+                    `SUMMARY:${code} - ${name}`,
+                    `DESCRIPTION:${code} (${startTime}-${endTime})`,
+                    "LOCATION:Drexel University",
+                    `UID:${code}-${startTime}-${day}@drexel.dashboard`,
+                    "END:VEVENT"
+                );
+            });
+            cal.push("END:VCALENDAR");
+            const icsContent = cal.join("\n");
+            const blob = new Blob([icsContent], { type: "text/calendar" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "schedule.ics";
+            a.click();
+            URL.revokeObjectURL(url);
         }
-    
-        document.querySelector('.export-calendar-btn').addEventListener('click', function () {
+
+        function exportToGoogle() {
+            if (!schedule || schedule.length === 0) {
+                alert("No schedule to export!");
+                return;
+            }
+            const now = new Date();
+            const termStart = new Date(now.getFullYear(), 8, 1);
+            schedule.forEach(event => {
+                const [day, code, name, startTime, endTime] = event;
+                const dayIndex = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].indexOf(day);
+                if (dayIndex === -1) return;
+                const eventDate = new Date(termStart);
+                eventDate.setDate(termStart.getDate() + ((dayIndex + 1) % 7));
+                const startMinutes = timeToMinutes(startTime);
+                const endMinutes = timeToMinutes(endTime);
+                const startDateTime = new Date(eventDate);
+                startDateTime.setHours(Math.floor(startMinutes / 60), startMinutes % 60);
+                const endDateTime = new Date(eventDate);
+                endDateTime.setHours(Math.floor(endMinutes / 60), endMinutes % 60);
+                const formatDate = dt => dt.toISOString().replace(/[-:]/g, '').split('.')[0];
+                const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+                    `&text=${encodeURIComponent(`${code} - ${name}`)}` +
+                    `&dates=${formatDate(startDateTime)}/${formatDate(endDateTime)}` +
+                    `&details=${encodeURIComponent(`${code} (${startTime}-${endTime})`)}` +
+                    `&location=${encodeURIComponent("Drexel University")}` +
+                    `&recur=RRULE:FREQ=WEEKLY;UNTIL=${new Date(now.getFullYear(), 11, 15).toISOString().replace(/[-:]/g, '').split('.')[0]}`;
+                window.open(googleUrl, '_blank');
+            });
+        }
+
+        const calendarBtn = document.querySelector('.export-calendar-btn');
+        const calendarDropdown = document.querySelector('.calendar-dropdown');
+        calendarBtn.addEventListener('click', function () {
             const isExpanded = this.getAttribute('aria-expanded') === 'true';
             this.setAttribute('aria-expanded', !isExpanded);
+            calendarDropdown.style.display = isExpanded ? 'none' : 'block';
         });
-    
-        function exportToICal() {
-            const schedule = {{ schedule | tojson }};
-            if (!schedule || schedule.length === 0) {
-                alert("No schedule to export!");
-                return;
+
+        document.addEventListener('click', function (event) {
+            if (!calendarBtn.contains(event.target) && !calendarDropdown.contains(event.target)) {
+                calendarBtn.setAttribute('aria-expanded', 'false');
+                calendarDropdown.style.display = 'none';
             }
-            alert("Exporting to iCal/Outlook... (Implementation pending)");
-        }
-    
-        function exportToGoogle() {
-            const schedule = {{ schedule | tojson }};
-            if (!schedule || schedule.length === 0) {
-                alert("No schedule to export!");
-                return;
-            }
-            alert("Exporting to Google Calendar... (Implementation pending)");
-        }
-    
-        const tryAnotherButton = document.getElementById('try-another-schedule');
-    if (tryAnotherButton) {
-        tryAnotherButton.addEventListener('click', function () {
-            console.log('Try Another Schedule button clicked');
-            // Fallback to static URL if url_for fails
-            const scheduleUrl = "{{ url_for('schedule') | safe }}" || '/schedule';
-            window.location.href = scheduleUrl;
         });
-    } else {
-        console.error('Try Another Schedule button not found in DOM');
-    }
+
+        document.getElementById('try-another-schedule').addEventListener('click', function () {
+            window.location.href = "{{ url_for('schedule') }}";
+        });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93302d0f2924e614',t:'MTc0NTEwNTI4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
