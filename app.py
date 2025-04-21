@@ -358,7 +358,7 @@ def init_db():
                 (10056, 'SE 310', 'Software Architecture I', '10:00AM', '11:00AM', 'Wednesday'),
                 (10057, 'SE 310', 'Software Architecture I', '02:00PM', '03:00PM', 'Friday'),
 
-                (10018, 'UNIV 101', 'The Drexel Experience', '01:00PM', '02:00PM', 'Thursday'),
+                (10079, 'UNIV 101', 'The Drexel Experience', '01:00PM', '02:00PM', 'Thursday'),
                 # New courses added below
                 (10058, 'COM 230', 'Techniques of Speaking', '09:00AM', '10:00AM', 'Monday'),
                 (10059, 'COM 230', 'Techniques of Speaking', '11:00AM', '12:00PM', 'Wednesday'),
