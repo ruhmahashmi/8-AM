@@ -53,10 +53,11 @@
                                                     {% set end_minutes = time_to_minutes(event[4]) %}
                                                     {% set slot_start = i * 60 %}
                                                     {% if start_minutes >= slot_start and start_minutes < slot_start + 60 %}
-                                                        <div class="course-card" style="height:{{ ((end_minutes - start_minutes) / 60 * 60) }}px; top:{{ ((start_minutes - slot_start) / 60 * 60) }}px;">
+                                                        <div class="course-card" style="height:{{ ((end_minutes - start_minutes) / 60 * 60) if end_minutes and start_minutes else 0 }}px; top:{{ ((start_minutes - slot_start) / 60 * 60) if start_minutes else 0 }}px;">
                                                             <div class="course-title">{{ event[1] }}</div>
                                                             <div class="course-time">{{ event[3] }} - {{ event[4] }}</div>
                                                         </div>
+                                                    {% endif %}
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
@@ -90,14 +91,14 @@
         </div>
     </div>
     <script>
-        const schedule = {{ schedule | tojson | safe }};
+        const schedule = JSON.parse('{{ schedule | tojson | safe }}');
         if (!Array.isArray(schedule) || schedule.length === 0) {
             console.warn("Schedule is empty or invalid:", schedule);
         }
 
         async function saveSchedule() {
             try {
-                console.log('Fetching URL:', '{{ url_for('save_current_schedule') }}');
+                console.log(`Fetching URL: {{ url_for('save_current_schedule') }}`);
                 const response = await fetch('{{ url_for('save_current_schedule') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
