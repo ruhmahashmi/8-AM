@@ -289,7 +289,14 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-    courses = Course.query.distinct(Course.course_code).order_by(Course.course_code).all()
+    # Fetch distinct courses by course_code and course_name
+    courses = db.session.query(Course.course_code, Course.course_name).distinct(Course.course_code).order_by(Course.course_code).all()
+    # Convert the result into a list of objects with course_code and course_name attributes
+    class CourseObj:
+        def __init__(self, course_code, course_name):
+            self.course_code = course_code
+            self.course_name = course_name
+    courses = [CourseObj(course[0], course[1]) for course in courses]
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -407,7 +414,6 @@ def save_current_schedule():
 
 @app.route('/saved_schedules')
 @login_required
-
 def saved_schedules():
     schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(Schedule.created_at.desc()).all()
     return render_template('saved_schedules.html', schedules=schedules)
@@ -568,6 +574,63 @@ def init_db():
             (10076, 'ENGL 103', 'Composition and Rhetoric III', '09:00AM', '10:00AM', 'Thursday'),
             (10077, 'ENGL 103', 'Composition and Rhetoric III', '12:00PM', '01:00PM', 'Wednesday'),
             (10078, 'ENGL 103', 'Composition and Rhetoric III', '03:00PM', '04:00PM', 'Monday'),
+            (10079, 'BIO 131', 'Cells and Biomolecules', '09:00AM', '10:00AM', 'Monday'),
+            (10080, 'BIO 131', 'Cells and Biomolecules', '11:00AM', '12:00PM', 'Wednesday'),
+            (10081, 'BIO 131', 'Cells and Biomolecules', '01:00PM', '02:00PM', 'Friday'),
+            (10082, 'BIO 134', 'Cells and Biomolecules Lab', '10:00AM', '11:00AM', 'Tuesday'),
+            (10083, 'BIO 134', 'Cells and Biomolecules Lab', '12:00PM', '01:00PM', 'Thursday'),
+            (10084, 'BIO 134', 'Cells and Biomolecules Lab', '02:00PM', '03:00PM', 'Monday'),
+            (10085, 'BIO 132', 'Genetics and Evolution', '08:00AM', '09:00AM', 'Wednesday'),
+            (10086, 'BIO 132', 'Genetics and Evolution', '10:00AM', '11:00AM', 'Friday'),
+            (10087, 'BIO 132', 'Genetics and Evolution', '01:00PM', '02:00PM', 'Tuesday'),
+            (10088, 'BIO 135', 'Genetics and Evolution Lab', '09:00AM', '10:00AM', 'Thursday'),
+            (10089, 'BIO 135', 'Genetics and Evolution Lab', '11:00AM', '12:00PM', 'Monday'),
+            (10090, 'BIO 135', 'Genetics and Evolution Lab', '03:00PM', '04:00PM', 'Wednesday'),
+            (10091, 'BIO 133', 'Physiology and Ecology', '08:00AM', '09:00AM', 'Friday'),
+            (10092, 'BIO 133', 'Physiology and Ecology', '12:00PM', '01:00PM', 'Tuesday'),
+            (10093, 'BIO 133', 'Physiology and Ecology', '02:00PM', '03:00PM', 'Thursday'),
+            (10094, 'BIO 136', 'Anatomy and Ecology Lab', '09:00AM', '10:00AM', 'Monday'),
+            (10095, 'BIO 136', 'Anatomy and Ecology Lab', '11:00AM', '12:00PM', 'Wednesday'),
+            (10096, 'BIO 136', 'Anatomy and Ecology Lab', '01:00PM', '02:00PM', 'Friday'),
+            (10097, 'CHEM 102', 'General Chemistry II', '09:00AM', '10:00AM', 'Tuesday'),
+            (10098, 'CHEM 102', 'General Chemistry II', '11:00AM', '12:00PM', 'Thursday'),
+            (10099, 'CHEM 102', 'General Chemistry II', '01:00PM', '02:00PM', 'Monday'),
+            (10100, 'CHEM 103', 'General Chemistry III', '08:00AM', '09:00AM', 'Wednesday'),
+            (10101, 'CHEM 103', 'General Chemistry III', '10:00AM', '11:00AM', 'Friday'),
+            (10102, 'CHEM 103', 'General Chemistry III', '02:00PM', '03:00PM', 'Tuesday'),
+            (10103, 'PHYS 101', 'Fundamentals of Physics I', '08:00AM', '09:00AM', 'Monday'),
+            (10104, 'PHYS 101', 'Fundamentals of Physics I', '10:00AM', '11:00AM', 'Wednesday'),
+            (10105, 'PHYS 101', 'Fundamentals of Physics I', '02:00PM', '03:00PM', 'Friday'),
+            (10106, 'PHYS 102', 'Fundamentals of Physics II', '09:00AM', '10:00AM', 'Tuesday'),
+            (10107, 'PHYS 102', 'Fundamentals of Physics II', '11:00AM', '12:00PM', 'Thursday'),
+            (10108, 'PHYS 102', 'Fundamentals of Physics II', '01:00PM', '02:00PM', 'Monday'),
+            (10109, 'PHYS 201', 'Fundamentals of Physics III', '08:00AM', '09:00AM', 'Wednesday'),
+            (10110, 'PHYS 201', 'Fundamentals of Physics III', '10:00AM', '11:00AM', 'Friday'),
+            (10111, 'PHYS 201', 'Fundamentals of Physics III', '02:00PM', '03:00PM', 'Tuesday'),
+            (10112, 'MATH 122', 'Calculus II', '09:00AM', '10:00AM', 'Monday'),
+            (10113, 'MATH 122', 'Calculus II', '11:00AM', '12:00PM', 'Wednesday'),
+            (10114, 'MATH 122', 'Calculus II', '01:00PM', '02:00PM', 'Friday'),
+            (10115, 'MATH 123', 'Calculus III', '08:00AM', '09:00AM', 'Tuesday'),
+            (10116, 'MATH 123', 'Calculus III', '10:00AM', '11:00AM', 'Thursday'),
+            (10117, 'MATH 123', 'Calculus III', '02:00PM', '03:00PM', 'Monday'),
+            (10118, 'CS 361', 'Operating Systems', '09:00AM', '10:00AM', 'Wednesday'),
+            (10119, 'CS 361', 'Operating Systems', '11:00AM', '12:00PM', 'Friday'),
+            (10120, 'CS 361', 'Operating Systems', '01:00PM', '02:00PM', 'Tuesday'),
+            (10121, 'CS 362', 'Database Systems', '08:00AM', '09:00AM', 'Thursday'),
+            (10122, 'CS 362', 'Database Systems', '10:00AM', '11:00AM', 'Monday'),
+            (10123, 'CS 362', 'Database Systems', '03:00PM', '04:00PM', 'Wednesday'),
+            (10124, 'MATH 200', 'Multivariate Calculus', '09:00AM', '10:00AM', 'Monday'),
+            (10125, 'MATH 200', 'Multivariate Calculus', '11:00AM', '12:00PM', 'Wednesday'),
+            (10126, 'MATH 200', 'Multivariate Calculus', '01:00PM', '02:00PM', 'Friday'),
+            (10127, 'MATH 201', 'Linear Algebra', '08:00AM', '09:00AM', 'Tuesday'),
+            (10128, 'MATH 201', 'Linear Algebra', '10:00AM', '11:00AM', 'Thursday'),
+            (10129, 'MATH 201', 'Linear Algebra', '02:00PM', '03:00PM', 'Monday'),
+            (10130, 'MATH 221', 'Discrete Mathematics', '09:00AM', '10:00AM', 'Wednesday'),
+            (10131, 'MATH 221', 'Discrete Mathematics', '11:00AM', '12:00PM', 'Friday'),
+            (10132, 'MATH 221', 'Discrete Mathematics', '01:00PM', '02:00PM', 'Tuesday'),
+            (10133, 'MATH 311', 'Probability and Statistics I', '08:00AM', '09:00AM', 'Thursday'),
+            (10134, 'MATH 311', 'Probability and Statistics I', '10:00AM', '11:00AM', 'Monday'),
+            (10135, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Wednesday'),
         ]
         inserted = 0
         for course in mock_courses:
