@@ -636,6 +636,28 @@ def init_db():
             (10133, 'MATH 311', 'Probability and Statistics I', '08:00AM', '09:00AM', 'Thursday'),
             (10134, 'MATH 311', 'Probability and Statistics I', '10:00AM', '11:00AM', 'Monday'),
             (10135, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Wednesday'),
+            (10079, 'CI 101', 'Computing and Informatics Design I', '08:00AM', '10:00AM', 'Monday'),
+            (10080, 'CI 101', 'Computing and Informatics Design I', '01:00PM', '03:00PM', 'Wednesday'),
+            (10081, 'CI 101', 'Computing and Informatics Design I', '09:00AM', '11:00AM', 'Friday'),
+            (10082, 'CI 102', 'Computing and Informatics Design II', '10:00AM', '12:00PM', 'Monday'),
+            (10083, 'CI 102', 'Computing and Informatics Design II', '02:00PM', '04:00PM', 'Wednesday'),
+            (10084, 'CI 102', 'Computing and Informatics Design II', '11:00AM', '01:00PM', 'Friday'),
+
+            (10085, 'CI 103', 'Computing and Informatics Design III', '08:00AM', '10:00AM', 'Tuesday'),
+            (10086, 'CI 103', 'Computing and Informatics Design III', '01:00PM', '03:00PM', 'Thursday'),
+            (10087, 'CI 103', 'Computing and Informatics Design III', '09:00AM', '11:00AM', 'Friday'),
+
+            (10088, 'CI 491 [WI]', 'Senior Project I', '10:00AM', '01:00PM', 'Monday'),
+            (10089, 'CI 491 [WI]', 'Senior Project I', '02:00PM', '05:00PM', 'Wednesday'),
+            (10090, 'CI 491 [WI]', 'Senior Project I', '01:00PM', '04:00PM', 'Friday'),
+
+            (10091, 'CI 492 [WI]', 'Senior Project II', '08:00AM', '11:00AM', 'Tuesday'),
+            (10092, 'CI 492 [WI]', 'Senior Project II', '01:00PM', '04:00PM', 'Thursday'),
+            (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '12:00PM', 'Friday'),
+
+            (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '01:00PM', 'Monday'),
+            (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '05:00PM', 'Wednesday'),
+            (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '04:00PM', 'Friday'),
         ]
         inserted = 0
         if Course.query.count() == 0:
