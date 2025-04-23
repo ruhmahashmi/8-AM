@@ -48,16 +48,17 @@
                                     <div class="day-slots">
                                         {% for i in range(8, 18) %}
                                             <div class="slot">
-                                                {% for event in schedule if event[0] == day %}
-                                                    {% set start_minutes = time_to_minutes(event[3]) %}
-                                                    {% set end_minutes = time_to_minutes(event[4]) %}
-                                                    {% set slot_start = i * 60 %}
-                                                    {% if start_minutes >= slot_start and start_minutes < slot_start + 60 %}
-                                                        <div class="course-card" style="height:{{ ((end_minutes - start_minutes) / 60 * 60) if end_minutes and start_minutes else 0 }}px; top:{{ ((start_minutes - slot_start) / 60 * 60) if start_minutes else 0 }}px;">
-                                                            <div class="course-title">{{ event[1] }}</div>
-                                                            <div class="course-time">{{ event[3] }} - {{ event[4] }}</div>
-                                                        </div>
-                                                    {% endif %}
+                                                {% for event in schedule %}
+                                                    {% if event[0] == day %}
+                                                        {% set start_minutes = time_to_minutes(event[3]) %}
+                                                        {% set end_minutes = time_to_minutes(event[4]) %}
+                                                        {% set slot_start = i * 60 %}
+                                                        {% if start_minutes >= slot_start and start_minutes < slot_start + 60 %}
+                                                            <div class="course-card" style="height:{{ ((end_minutes - start_minutes) / 60 * 60) if end_minutes and start_minutes else 0 }}px; top:{{ ((start_minutes - slot_start) / 60 * 60) if start_minutes else 0 }}px;">
+                                                                <div class="course-title">{{ event[1] }}</div>
+                                                                <div class="course-time">{{ event[3] }} - {{ event[4] }}</div>
+                                                            </div>
+                                                        {% endif %}
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
@@ -66,6 +67,7 @@
                                 </div>
                             {% endfor %}
                         </div>
+                        
                     </div>
                     <div class="save-confirmation" id="saveConfirmation" style="display: none;">
                         <p id="saveMessage"></p>
