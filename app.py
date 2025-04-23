@@ -289,7 +289,7 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-<<<<<<< HEAD
+
     # Fetch distinct courses by course_code and course_name
     courses = db.session.query(Course.course_code, Course.course_name).distinct(Course.course_code).order_by(Course.course_code).all()
     # Convert the result into a list of objects with course_code and course_name attributes
@@ -298,10 +298,9 @@ def schedule():
             self.course_code = course_code
             self.course_name = course_name
     courses = [CourseObj(course[0], course[1]) for course in courses]
-=======
+
     courses = Course.query.all()
     print(courses)
->>>>>>> 3814d8ee45fa503082df62520b1b7652378816a3
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -500,7 +499,7 @@ def init_db():
     with app.app_context():
         db.create_all()
         logger.debug("Initializing database with mock courses")
-<<<<<<< HEAD
+
         mock_courses = [
             (10001, 'CS 164', 'Intro to Computer Science', '08:00AM', '09:00AM', 'Monday'),
             (10002, 'CS 164', 'Intro to Computer Science', '10:00AM', '11:00AM', 'Wednesday'),
@@ -638,8 +637,6 @@ def init_db():
             (10134, 'MATH 311', 'Probability and Statistics I', '10:00AM', '11:00AM', 'Monday'),
             (10135, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Wednesday'),
         ]
-=======
->>>>>>> 3814d8ee45fa503082df62520b1b7652378816a3
         inserted = 0
         if Course.query.count() == 0:
             mock_courses = [
