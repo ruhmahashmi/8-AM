@@ -1,12 +1,10 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask import render_template, request, redirect, url_for, flash
-from flask_login import login_required
-import os
-import logging
-import base64
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
+import logging
+import os
+import base64
 
 # Flask app setup
 app = Flask(__name__)
@@ -48,15 +46,16 @@ class Course(db.Model):
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    course1 = db.Column(db.String(50))
-    course2 = db.Column(db.String(50))
-    course3 = db.Column(db.String(50))
-    course4 = db.Column(db.String(50))
-    course5 = db.Column(db.String(50))
+    course1 = db.Column(db.String(100))
+    course2 = db.Column(db.String(100))
+    course3 = db.Column(db.String(100))
+    course4 = db.Column(db.String(100))
+    course5 = db.Column(db.String(100))
     start_time = db.Column(db.String(10))
     end_time = db.Column(db.String(10))
     spacing = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_favorite = db.Column(db.Boolean, default=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -402,8 +401,44 @@ def save_current_schedule():
 @app.route('/saved_schedules')
 @login_required
 def saved_schedules():
-    schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(Schedule.created_at.desc()).all()
+    schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(Schedule.is_favorite.desc(), Schedule.created_at.desc()).all()
     return render_template('saved_schedules.html', schedules=schedules)
+
+@app.route('/admin/add_course', methods=['GET', 'POST'])
+@login_required
+def add_course():
+    if request.method == 'POST':
+        try:
+            course = Course(
+                course_code=request.form['course_code'],
+                course_name=request.form['course_name'],
+                start_time=request.form['start_time'],
+                end_time=request.form['end_time'],
+                day=request.form['day']
+            )
+            db.session.add(course)
+            db.session.commit()
+            flash('Course added successfully!', 'success')
+            logger.info(f"Added course: {course.course_code} - {course.course_name}")
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding course: {str(e)}', 'error')
+            logger.error(f"Failed to add course: {str(e)}")
+        return redirect(url_for('add_course'))
+    return render_template('add_course.html')
+
+@app.route('/toggle_favorite/<int:schedule_id>', methods=['POST'])
+@login_required
+def toggle_favorite(schedule_id):
+    logger.debug(f"Attempting to toggle favorite for schedule ID {schedule_id} for user {current_user.id}")
+    schedule = Schedule.query.get_or_404(schedule_id)
+    if schedule.user_id != current_user.id:
+        logger.warning(f"Unauthorized attempt to toggle favorite for schedule ID {schedule_id} by user {current_user.id}")
+        return jsonify({'success': False, 'message': 'Unauthorized action.'}), 403
+    schedule.is_favorite = not schedule.is_favorite
+    db.session.commit()
+    logger.info(f"Schedule ID {schedule_id} favorite status set to {schedule.is_favorite} by user {current_user.id}")
+    return jsonify({'success': True, 'message': f'Schedule #{schedule_id} {"favorited" if schedule.is_favorite else "unfavorited"}.', 'is_favorite': schedule.is_favorite}), 200
 
 @app.route('/display_schedule')
 @login_required

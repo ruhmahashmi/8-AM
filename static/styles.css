@@ -467,3 +467,25 @@ button:hover, .generate-btn:hover, .action-btn:hover {
 .regenerate-btn {
     display: none;
 }
+
+/* favourite schedule highlight */
+.schedule-card.favorite {
+    border: 2px solid #FFD700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.favorite-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2em;
+}
+
+.star {
+    color: #FFFFFF; /* White when not favorited */
+}
+
+.star.filled {
+    color: #FFD700; /* Gold when favorited */
+}

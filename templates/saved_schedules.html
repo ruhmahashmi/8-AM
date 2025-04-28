@@ -9,54 +9,82 @@
 <body>
     <div class="container">
         <div class="sidebar">
-          3  <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
-                <li><a href="{{ url_for('saved_schedules') }}" class="active">Saved Schedules</a></li>
-                <li><a href="#">My Courses</a></li>
-                <li><a href="#">My Progress</a></li>
-                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
+                <li><a href="{{ url_for('add_course') }}">Add Course</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
         </div>
         <div class="main-content">
-            <nav class="navbar">
-                <span class="time">8 AM</span>
+            <div class="navbar">
+                <div class="time">{{ current_time }}</div>
                 <ul class="nav-links">
                     <li><a href="{{ url_for('dashboard') }}">Home</a></li>
-                    <li><a href="#">Courses</a></li>
-                    <li><a href="#">About</a></li>
                     <li><a href="{{ url_for('profile') }}">Profile</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
-            </nav>
-            <h1>Saved Schedules</h1>
-            <div class="scheduler-container">
-                {% if schedules and schedules|length > 0 %}
-                    <div class="saved-schedules-list">
-                        {% for schedule in schedules %}
-                            <div class="schedule-card">
-                                <h2>Schedule #{{ schedule.id }}</h2>
-                                <p><strong>Courses:</strong> 
-                                    {{ [schedule.course1, schedule.course2, schedule.course3, schedule.course4, schedule.course5] | select('string') | join(', ') or 'None' }}
-                                </p>
-                                <p><strong>Time Preference:</strong> {{ schedule.start_time }} - {{ schedule.end_time }}</p>
-                                <p><strong>Spacing:</strong> {{ schedule.spacing | capitalize }}</p>
-                                <p><strong>Saved:</strong> {{ schedule.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                                <div class="schedule-actions">
-                                    <a href="{{ url_for('display_schedule', schedule_id=schedule.id) }}" class="action-btn">View Schedule</a>
-                                    <form action="{{ url_for('delete_schedule', schedule_id=schedule.id) }}" method="POST" style="display: inline;">
-                                        <button type="submit" class="action-btn delete-btn" onclick="return confirm('Are you sure you want to delete Schedule #{{ schedule.id }}?');">Delete</button>
-                                    </form>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="no-schedule">No saved schedules. Generate a new schedule to get started!</p>
-                {% endif %}
-                <a href="{{ url_for('schedule') }}" class="action-btn generate-btn">Create New Schedule</a>
             </div>
+            <h1>Saved Schedules</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% if schedules %}
+                <div class="schedule-grid">
+                    {% for schedule in schedules %}
+                        <div class="schedule-card {% if schedule.is_favorite %}favorite{% endif %}" aria-labelledby="schedule-{{ schedule.id }}">
+                            <div class="schedule-header">
+                                <h2 id="schedule-{{ schedule.id }}">Schedule #{{ schedule.id }}</h2>
+                                <button class="favorite-btn" data-schedule-id="{{ schedule.id }}" aria-label="{% if schedule.is_favorite %}Unmark schedule {{ schedule.id }} as favorite{% else %}Mark schedule {{ schedule.id }} as favorite{% endif %}">
+                                    <span class="star {% if schedule.is_favorite %}filled{% endif %}">&#9733;</span>
+                                </button>
+                            </div>
+                            <p><strong>Courses:</strong> {{ [schedule.course1, schedule.course2, schedule.course3, schedule.course4, schedule.course5]|reject('none')|join(', ') }}</p>
+                            <p><strong>Time:</strong> {{ schedule.start_time }} - {{ schedule.end_time }}</p>
+                            <p><strong>Spacing:</strong> {{ schedule.spacing }}</p>
+                            <p><strong>Created:</strong> {{ schedule.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            <div class="schedule-actions">
+                                <a href="{{ url_for('display_schedule', schedule_id=schedule.id) }}" class="btn view-btn">View</a>
+                                <form action="{{ url_for('delete_schedule', schedule_id=schedule.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete Schedule #{{ schedule.id }}?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No saved schedules found. Generate a new schedule to get started!</p>
+            {% endif %}
         </div>
     </div>
+    <script>
+        document.querySelectorAll('.favorite-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const scheduleId = button.dataset.scheduleId;
+                try {
+                    const response = await fetch(`/toggle_favorite/${scheduleId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        button.querySelector('.star').classList.toggle('filled');
+                        button.closest('.schedule-card').classList.toggle('favorite');
+                        button.setAttribute('aria-label', result.is_favorite ? `Unmark schedule ${scheduleId} as favorite` : `Mark schedule ${scheduleId} as favorite`);
+                        window.location.reload(); // Reload to sort favorites at top
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    alert('Error toggling favorite status. Please try again.');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
