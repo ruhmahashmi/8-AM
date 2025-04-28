@@ -33,7 +33,8 @@
             <div class="scheduler-container">
                 <form action="{{ url_for('save_schedule') }}" method="POST" id="scheduleForm">
                     <h2>Course Selection</h2>
-                    <div class="course-selection">
+                    <div class="course-selection" id="course-selection">
+                        <!-- Initially show 5 course selection fields -->
                         {% for i in range(1, 6) %}
                             <label for="course{{ i }}">Course {{ i }}</label>
                             <select name="course{{ i }}" id="course{{ i }}">
@@ -44,8 +45,9 @@
                             </select>
                         {% endfor %}
                     </div>
-                    
-                    
+                    <!-- Button to add more course fields -->
+                    <button type="button" id="addCourseBtn" class="add-course-btn">Add More Course</button>
+
                     <h2>Preferences</h2>
                     <label for="startTime">Preferred Start Time</label>
                     <select name="startTime" id="startTime" required>
@@ -73,10 +75,31 @@
             </div>
         </div>
     </div>
+
     <script>
-        document.getElementById('scheduleForm').addEventListener('submit', function() {
-            const formData = new FormData(this);
-            console.log('Form submitted with data:', Object.fromEntries(formData));
+        // Function to add new course selection fields
+        let courseCount = 5; // Start with 5 courses
+
+        document.getElementById('addCourseBtn').addEventListener('click', function() {
+            courseCount++;
+            
+            // Create a new label and select element for the course
+            const newCourseLabel = document.createElement('label');
+            newCourseLabel.setAttribute('for', `course${courseCount}`);
+            newCourseLabel.textContent = `Course ${courseCount}`;
+            
+            const newCourseSelect = document.createElement('select');
+            newCourseSelect.name = `course${courseCount}`;
+            newCourseSelect.id = `course${courseCount}`;
+            newCourseSelect.innerHTML = `<option value="">Select a course</option>
+                {% for course in courses %}
+                    <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
+                {% endfor %}`;
+            
+            // Append the new label and select to the course selection container
+            const courseSelection = document.getElementById('course-selection');
+            courseSelection.appendChild(newCourseLabel);
+            courseSelection.appendChild(newCourseSelect);
         });
     </script>
 </body>

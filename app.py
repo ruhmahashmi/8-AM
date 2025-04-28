@@ -310,43 +310,39 @@ def schedule():
 def save_schedule():
     try:
         logger.debug(f"Received form data for user {current_user.id}: {request.form}")
+
         # Clear previous schedule_id to prevent invalid redirects
         if 'schedule_id' in session:
-            logger.debug(f"Clearing old session['schedule_id']: {session['schedule_id']}")
             session.pop('schedule_id')
-        course1 = request.form.get('course1')
-        course2 = request.form.get('course2')
-        course3 = request.form.get('course3')
-        course4 = request.form.get('course4')
-        course5 = request.form.get('course5')
+
+        # Get all course fields dynamically
+        courses_selected = []
+        i = 1
+        while True:
+            course = request.form.get(f'course{i}')
+            if not course:
+                break
+            courses_selected.append(course)
+            i += 1
+
         start_time = request.form.get('startTime')
         end_time = request.form.get('endTime')
         spacing = request.form.get('spacing', 'compact')
 
-        # Filter out empty selections and remove duplicates
-        courses_selected = list(set([course for course in [course1, course2, course3, course4, course5] if course]))
         logger.debug(f"Courses selected: {courses_selected}, Start: {start_time}, End: {end_time}, Spacing: {spacing}")
+
         if not courses_selected:
-            logger.error(f"No courses selected by user {current_user.id}")
             flash('Please select at least one course.', 'error')
-            logger.info("Redirecting to /schedule due to no courses selected")
             return redirect(url_for('schedule'))
 
         # Validate time range
-        try:
-            start_minutes = time_to_minutes(start_time)
-            end_minutes = time_to_minutes(end_time)
-            if start_minutes is None or end_minutes is None:
-                raise ValueError("Invalid time format")
-            if start_minutes >= end_minutes:
-                logger.error(f"Invalid time range: start={start_time} ({start_minutes}), end={end_time} ({end_minutes})")
-                flash('End time must be after start time.', 'error')
-                logger.info("Redirecting to /schedule due to invalid time range")
-                return redirect(url_for('schedule'))
-        except Exception as e:
-            logger.error(f"Time parsing error for user {current_user.id}: {e}")
+        start_minutes = time_to_minutes(start_time)
+        end_minutes = time_to_minutes(end_time)
+        if start_minutes is None or end_minutes is None:
             flash('Invalid time format. Please use HH:MM AM/PM.', 'error')
-            logger.info("Redirecting to /schedule due to time parsing error")
+            return redirect(url_for('schedule'))
+        if start_minutes >= end_minutes:
+            flash('End time must be after start time.', 'error')
             return redirect(url_for('schedule'))
 
         # Generate schedule
@@ -357,31 +353,16 @@ def save_schedule():
             session['start_time'] = start_time
             session['end_time'] = end_time
             session['spacing'] = spacing
-            logger.info(f"Schedule generated for user {current_user.id}: {schedule}")
             flash('Schedule generated successfully! Save it to keep it.', 'success')
-            logger.info("Redirecting to /display_schedule")
             return redirect(url_for('display_schedule'))
         else:
-            # Check why generation failed
-            all_courses = Course.query.filter(Course.course_code.in_(courses_selected)).all()
-            if not all_courses:
-                logger.error(f"No courses found in database for {courses_selected}")
-                flash('Selected courses are not available in the database. Try different courses.', 'error')
-            else:
-                available_courses = [c for c in all_courses if time_to_minutes(c.start_time) >= start_minutes and time_to_minutes(c.start_time) <= end_minutes]
-                if not available_courses:
-                    logger.error(f"No courses available within time range {start_time}-{end_time} for {courses_selected}")
-                    flash(f'No courses are available between {start_time} and {end_time}. Try a wider time range.', 'error')
-                else:
-                    logger.error(f"Failed to find a conflict-free schedule for {courses_selected}")
-                    flash('Could not generate a conflict-free schedule. Try fewer courses, a wider time range, or compact spacing.', 'error')
-            logger.info("Redirecting to /schedule due to schedule generation failure")
+            flash('Could not generate a conflict-free schedule. Try fewer courses, a wider time range, or compact spacing.', 'error')
             return redirect(url_for('schedule'))
     except Exception as e:
         logger.error(f"Unexpected error in save_schedule for user {current_user.id}: {e}")
         flash('An unexpected error occurred. Please try again.', 'error')
-        logger.info("Redirecting to /schedule due to unexpected error")
         return redirect(url_for('schedule'))
+
     
 @app.route('/save_current_schedule', methods=['POST'])
 @login_required
