@@ -44,7 +44,7 @@ class Course(db.Model):
     start_time = db.Column(db.String(10), nullable=False)
     end_time = db.Column(db.String(10), nullable=False)
     day = db.Column(db.String(10), nullable=False)
-    credits = db.Column(db.Integer, nullable=False, default=3) 
+    credits = db.Column(db.Integer, nullable=False, default=3)
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
