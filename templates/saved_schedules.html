@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Drexel Logo" class="logo">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
                 <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
@@ -37,12 +37,17 @@
             {% if schedules %}
                 <div class="schedule-grid">
                     {% for schedule in schedules %}
-                        <div class="schedule-card {% if schedule.is_favorite %}favorite{% endif %}" aria-labelledby="schedule-{{ schedule.id }}">
+                        <div class="schedule-card {% if schedule.is_favorite %}favorite{% endif %} {% if schedule.is_priority %}priority{% endif %}" aria-labelledby="schedule-{{ schedule.id }}">
                             <div class="schedule-header">
-                                <h2 id="schedule-{{ schedule.id }}">Schedule #{{ schedule.id }}</h2>
-                                <button class="favorite-btn" data-schedule-id="{{ schedule.id }}" aria-label="{% if schedule.is_favorite %}Unmark schedule {{ schedule.id }} as favorite{% else %}Mark schedule {{ schedule.id }} as favorite{% endif %}">
-                                    <span class="star {% if schedule.is_favorite %}filled{% endif %}">&#9733;</span>
-                                </button>
+                                <h2 id="schedule-{{ schedule.id }}">Schedule #{{ schedule.id }} {% if schedule.is_priority %}<span class="priority-label">Priority</span>{% endif %}</h2>
+                                <div class="schedule-actions-top">
+                                    <button class="favorite-btn" data-schedule-id="{{ schedule.id }}" aria-label="{% if schedule.is_favorite %}Unmark schedule {{ schedule.id }} as favorite{% else %}Mark schedule {{ schedule.id }} as favorite{% endif %}">
+                                        <span class="star {% if schedule.is_favorite %}filled{% endif %}">★</span>
+                                    </button>
+                                    <button class="priority-btn" data-schedule-id="{{ schedule.id }}" aria-label="{% if schedule.is_priority %}Unmark schedule {{ schedule.id }} as priority{% else %}Mark schedule {{ schedule.id }} as priority{% endif %}">
+                                        <span class="crown {% if schedule.is_priority %}filled{% endif %}">👑</span>
+                                    </button>
+                                </div>
                             </div>
                             <p><strong>Courses:</strong> {{ [schedule.course1, schedule.course2, schedule.course3, schedule.course4, schedule.course5]|reject('none')|join(', ') }}</p>
                             <p><strong>Time:</strong> {{ schedule.start_time }} - {{ schedule.end_time }}</p>
@@ -76,12 +81,32 @@
                         button.querySelector('.star').classList.toggle('filled');
                         button.closest('.schedule-card').classList.toggle('favorite');
                         button.setAttribute('aria-label', result.is_favorite ? `Unmark schedule ${scheduleId} as favorite` : `Mark schedule ${scheduleId} as favorite`);
-                        window.location.reload(); // Reload to sort favorites at top
+                        window.location.reload();
                     } else {
                         alert(result.message);
                     }
                 } catch (error) {
                     alert('Error toggling favorite status. Please try again.');
+                }
+            });
+        });
+    
+        document.querySelectorAll('.priority-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const scheduleId = button.dataset.scheduleId;
+                try {
+                    const response = await fetch(`/set_priority/${scheduleId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    alert('Error setting priority status. Please try again.');
                 }
             });
         });

@@ -489,3 +489,40 @@ button:hover, .generate-btn:hover, .action-btn:hover {
 .star.filled {
     color: #FFD700; /* Gold when favorited */
 }
+/* priority schedule highlight */
+.schedule-card.priority {
+    border: 3px solid #FFD700;
+    background: rgba(255, 215, 0, 0.15);
+}
+
+.priority-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2em;
+    margin-left: 10px;
+}
+
+.crown {
+    color: #FFFFFF; /* White when not priority */
+}
+
+.crown.filled {
+    color: #FFD700; /* Gold when priority */
+}
+
+.priority-label {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-left: 10px;
+    background: rgba(7, 41, 78, 0.8); /* Navy #07294E */
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.schedule-actions-top {
+    display: flex;
+    align-items: center;
+}
