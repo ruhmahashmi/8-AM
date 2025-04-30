@@ -151,10 +151,10 @@ button, .generate-btn, .action-btn {
     background: linear-gradient(135deg, #FFD700, #FFC107);
     color: #07294E;
     border: none;
-    padding: 12px 24px;
+    padding: 10px 20px;
     cursor: pointer;
     border-radius: 5px;
-    font-size: 1em;
+    font-size: 1.1em;
     font-weight: bold;
     transition: transform 0.3s, box-shadow 0.3s;
 }
@@ -168,7 +168,7 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     display: block;
     margin: 20px auto;
     padding: 15px 30px;
-    font-size: 1.1em;
+    font-size: 1.2em;
 }
 
 .course-selection {
@@ -326,6 +326,7 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     to { transform: translateY(0); opacity: 1; }
 }
 
+
 /* Profile-specific styles */
 .profile-container {
     display: flex;
@@ -374,24 +375,35 @@ button:hover, .generate-btn:hover, .action-btn:hover {
 /* Button Container Adjustments */
 .button-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
     justify-content: center;
-    margin-top: 25px;
+    align-items: center;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
+/* Uniform Button Styling */
 .export-btn {
     background: linear-gradient(135deg, #FFD700, #FFC107);
     color: #07294E;
     border: none;
-    padding: 12px 24px;
+    padding: 10px 20px;
     cursor: pointer;
     border-radius: 5px;
-    font-size: 1em;
+    font-size: 1.1em;
     font-weight: bold;
     transition: transform 0.3s, box-shadow 0.3s;
-    min-width: 140px;
+    width: 180px; /* Slightly larger for better fit */
+    height: 44px; /* Fixed height for uniformity */
+    line-height: 1.2; /* Consistent text alignment */
     text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Ellipsis for long text */
 }
 
 .export-btn:hover {
@@ -399,42 +411,38 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-.save-btn {
-    background: linear-gradient(135deg, #FFD700, #FFC107);
-    color: #07294E;
-    padding: 12px 24px;
-    font-size: 1em;
-    min-width: 140px;
-}
-
+/* Export Calendar Button and Dropdown */
 .export-calendar-container {
     position: relative;
-    display: inline-block;
+    display: flex;
+    align-items: center;
 }
 
+.export-calendar-btn {
+    width: 180px; /* Match other buttons */
+    height: 44px; /* Match other buttons */
+}
+
+/* Dropdown styling */
 .calendar-dropdown {
     display: none;
     position: absolute;
     top: 100%;
     left: 0;
-    background: #FFFFFF;
-    border: 1px solid #07294E;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 5px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     min-width: 180px;
-}
-
-.calendar-dropdown[aria-expanded="true"] {
-    display: block;
+    z-index: 10;
 }
 
 .calendar-dropdown a {
     display: block;
-    padding: 12px 15px;
+    padding: 10px 15px;
     color: #07294E;
     text-decoration: none;
     font-size: 1em;
+    transition: background 0.3s;
 }
 
 .calendar-dropdown a:hover {
@@ -442,14 +450,9 @@ button:hover, .generate-btn:hover, .action-btn:hover {
     color: #07294E;
 }
 
-.save-confirmation {
-    text-align: center;
-    margin: 10px 0;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    color: #FFFFFF;
-    font-size: 1em;
+.export-calendar-container:hover .calendar-dropdown,
+.export-calendar-btn[aria-expanded="true"] + .calendar-dropdown {
+    display: block;
 }
 
 /* Accessibility Enhancements */
@@ -466,63 +469,4 @@ button:hover, .generate-btn:hover, .action-btn:hover {
 /* Ensure regenerate-btn is hidden */
 .regenerate-btn {
     display: none;
-}
-
-/* favourite schedule highlight */
-.schedule-card.favorite {
-    border: 2px solid #FFD700;
-    background: rgba(255, 215, 0, 0.1);
-}
-
-.favorite-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    font-size: 1.2em;
-}
-
-.star {
-    color: #FFFFFF; /* White when not favorited */
-}
-
-.star.filled {
-    color: #FFD700; /* Gold when favorited */
-}
-/* priority schedule highlight */
-.schedule-card.priority {
-    border: 3px solid #FFD700;
-    background: rgba(255, 215, 0, 0.15);
-}
-
-.priority-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    font-size: 1.2em;
-    margin-left: 10px;
-}
-
-.crown {
-    color: #FFFFFF; /* White when not priority */
-}
-
-.crown.filled {
-    color: #FFD700; /* Gold when priority */
-}
-
-.priority-label {
-    color: #FFD700;
-    font-weight: bold;
-    font-size: 0.9em;
-    margin-left: 10px;
-    background: rgba(7, 41, 78, 0.8); /* Navy #07294E */
-    padding: 2px 8px;
-    border-radius: 3px;
-}
-
-.schedule-actions-top {
-    display: flex;
-    align-items: center;
 }
