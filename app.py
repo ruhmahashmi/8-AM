@@ -1,12 +1,11 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask import render_template, request, redirect, url_for, flash
-from flask_login import login_required
-import os
-import logging
-import base64
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
+import logging
+import os
+import base64
+from sqlalchemy import text
 
 # Flask app setup
 app = Flask(__name__)
@@ -48,15 +47,17 @@ class Course(db.Model):
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    course1 = db.Column(db.String(50))
-    course2 = db.Column(db.String(50))
-    course3 = db.Column(db.String(50))
-    course4 = db.Column(db.String(50))
-    course5 = db.Column(db.String(50))
+    course1 = db.Column(db.String(100))
+    course2 = db.Column(db.String(100))
+    course3 = db.Column(db.String(100))
+    course4 = db.Column(db.String(100))
+    course5 = db.Column(db.String(100))
     start_time = db.Column(db.String(10))
     end_time = db.Column(db.String(10))
     spacing = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_favorite = db.Column(db.Boolean, default=False)
+    is_priority = db.Column(db.Boolean, default=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -377,10 +378,8 @@ def save_current_schedule():
         logger.error(f"No schedule or courses to save for user {current_user.id}")
         return jsonify({'success': False, 'message': 'No schedule to save.'}), 400
 
-    # Extract courses for database
     course_dict = {f'course{i+1}': courses_selected[i] if i < len(courses_selected) else None for i in range(5)}
 
-    # Save to database
     new_schedule = Schedule(
         user_id=current_user.id,
         course1=course_dict.get('course1'),
@@ -402,9 +401,89 @@ def save_current_schedule():
 @app.route('/saved_schedules')
 @login_required
 def saved_schedules():
-    schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(Schedule.created_at.desc()).all()
-    return render_template('saved_schedules.html', schedules=schedules)
+    try:
+        # Check if is_favorite and is_priority columns exist
+        conn = db.engine.connect()
+        result = conn.execute(text("PRAGMA table_info(schedule)")).fetchall()
+        columns = [row[1] for row in result]
+        conn.close()
+        
+        if 'is_favorite' not in columns or 'is_priority' not in columns:
+            logger.error("is_favorite or is_priority column missing in schedule table")
+            flash('Priority and favorite features unavailable. Please contact support.', 'error')
+            schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(Schedule.created_at.desc()).all()
+        else:
+            schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(
+                Schedule.is_priority.desc(),
+                Schedule.is_favorite.desc(),
+                Schedule.created_at.desc()
+            ).all()
+        
+        return render_template('saved_schedules.html', schedules=schedules)
+    except Exception as e:
+        logger.error(f"Error fetching saved schedules for user {current_user.id}: {str(e)}")
+        flash('Error loading saved schedules. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
 
+@app.route('/admin/add_course', methods=['GET', 'POST'])
+@login_required
+def add_course():
+    if request.method == 'POST':
+        try:
+            course = Course(
+                course_code=request.form['course_code'],
+                course_name=request.form['course_name'],
+                start_time=request.form['start_time'],
+                end_time=request.form['end_time'],
+                day=request.form['day']
+            )
+            db.session.add(course)
+            db.session.commit()
+            flash('Course added successfully!', 'success')
+            logger.info(f"Added course: {course.course_code} - {course.course_name}")
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding course: {str(e)}', 'error')
+            logger.error(f"Failed to add course: {str(e)}")
+        return redirect(url_for('add_course'))
+    return render_template('add_course.html')
+
+@app.route('/toggle_favorite/<int:schedule_id>', methods=['POST'])
+@login_required
+def toggle_favorite(schedule_id):
+    logger.debug(f"Attempting to toggle favorite for schedule ID {schedule_id} for user {current_user.id}")
+    schedule = Schedule.query.get_or_404(schedule_id)
+    if schedule.user_id != current_user.id:
+        logger.warning(f"Unauthorized attempt to toggle favorite for schedule ID {schedule_id} by user {current_user.id}")
+        return jsonify({'success': False, 'message': 'Unauthorized action.'}), 403
+    schedule.is_favorite = not schedule.is_favorite
+    db.session.commit()
+    logger.info(f"Schedule ID {schedule_id} favorite status set to {schedule.is_favorite} by user {current_user.id}")
+    return jsonify({'success': True, 'message': f'Schedule #{schedule_id} {"favorited" if schedule.is_favorite else "unfavorited"}.', 'is_favorite': schedule.is_favorite}), 200
+
+@app.route('/set_priority/<int:schedule_id>', methods=['POST'])
+@login_required
+def set_priority(schedule_id):
+    logger.debug(f"Attempting to set priority for schedule ID {schedule_id} for user {current_user.id}")
+    schedule = Schedule.query.get_or_404(schedule_id)
+    if schedule.user_id != current_user.id:
+        logger.warning(f"Unauthorized attempt to set priority for schedule ID {schedule_id} by user {current_user.id}")
+        return jsonify({'success': False, 'message': 'Unauthorized action.'}), 403
+    
+    try:
+        # Clear existing priority for this user
+        Schedule.query.filter_by(user_id=current_user.id, is_priority=True).update({'is_priority': False})
+        
+        # Set new priority
+        schedule.is_priority = True
+        db.session.commit()
+        logger.info(f"Schedule ID {schedule_id} set as priority for user {current_user.id}")
+        return jsonify({'success': True, 'message': f'Schedule #{schedule_id} set as priority.', 'is_priority': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error setting priority for schedule ID {schedule_id}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error setting priority: {str(e)}'}), 500
+    
 @app.route('/display_schedule')
 @login_required
 def display_schedule():
