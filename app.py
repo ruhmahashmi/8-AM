@@ -43,6 +43,7 @@ class Course(db.Model):
     start_time = db.Column(db.String(10), nullable=False)
     end_time = db.Column(db.String(10), nullable=False)
     day = db.Column(db.String(10), nullable=False)
+    credits = db.Column(db.Integer, nullable=False, default=3)
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -663,10 +664,10 @@ def init_db():
                 (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday'),
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday'),
                 (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday'),
-                10097, ('CI 101', 'The Drexel Experience', '09:00AM', '10:00AM', 'Monday'),
-                10098, ('CI 120', 'CCI Transfer Student Seminar', '11:00AM', '12:00PM', 'Wednesday'),
-                10099, ('CIVC 101', 'Introduction to Civic Engagement', '02:00PM', '03:00PM', 'Friday'),
-                10100, ('COOP 101', 'Career Management and Professional Development **', '10:00AM', '11:00AM', 'Tuesday'),
+                (10097, 'CI 101', 'The Drexel Experience', '09:00AM', '10:00AM', 'Monday'),
+                (10098, 'CI 120', 'CCI Transfer Student Seminar', '11:00AM', '12:00PM', 'Wednesday'),
+                (10099, 'CIVC 101', 'Introduction to Civic Engagement', '02:00PM', '03:00PM', 'Friday'),
+                (10100, 'COOP 101', 'Career Management and Professional Development', '10:00AM', '11:00AM', 'Tuesday')
             ]
         
             for course in mock_courses:
