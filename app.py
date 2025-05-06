@@ -292,7 +292,6 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-
     # Fetch distinct courses by course_code and course_name
     courses = db.session.query(Course.course_code, Course.course_name).distinct(Course.course_code).order_by(Course.course_code).all()
     # Convert the result into a list of objects with course_code and course_name attributes
@@ -301,9 +300,6 @@ def schedule():
             self.course_code = course_code
             self.course_name = course_name
     courses = [CourseObj(course[0], course[1]) for course in courses]
-
-    courses = Course.query.all()
-    print(courses)
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -364,7 +360,38 @@ def save_schedule():
         flash('An unexpected error occurred. Please try again.', 'error')
         return redirect(url_for('schedule'))
 
-    
+@app.route('/save_variant', methods=['POST'])
+@login_required
+def save_variant():
+    try:
+        schedule = session.get('schedule')
+        if not schedule:
+            logger.error(f"No schedule to save as variant for user {current_user.id}")
+            flash('No schedule to save as variant.', 'error')
+            return jsonify({'success': False, 'message': 'No schedule to save.'}), 400
+
+        # Initialize or retrieve schedule_variants
+        if 'schedule_variants' not in session:
+            session['schedule_variants'] = []
+        
+        # Check if max variants reached
+        if len(session['schedule_variants']) >= 3:
+            logger.debug(f"Max variants (3) reached for user {current_user.id}")
+            flash('Maximum 3 variants saved. Generate a new schedule to replace one.', 'error')
+            return jsonify({'success': False, 'message': 'Maximum 3 variants saved.'}), 400
+
+        # Append schedule to variants
+        session['schedule_variants'].append(schedule)
+        variant_number = len(session['schedule_variants'])
+        session.modified = True
+        logger.info(f"Schedule saved as variant {variant_number} for user {current_user.id}")
+        flash(f'Schedule saved as variant {variant_number}', 'success')
+        return jsonify({'success': True, 'message': f'Schedule saved as variant {variant_number}'}), 200
+    except Exception as e:
+        logger.error(f"Error saving variant for user {current_user.id}: {str(e)}")
+        flash('Error saving variant. Please try again.', 'error')
+        return jsonify({'success': False, 'message': 'Error saving variant.'}), 500
+
 @app.route('/save_current_schedule', methods=['POST'])
 @login_required
 def save_current_schedule():
@@ -431,6 +458,7 @@ def add_course():
     if request.method == 'POST':
         try:
             course = Course(
+                crn=request.form['crn'],
                 course_code=request.form['course_code'],
                 course_name=request.form['course_name'],
                 start_time=request.form['start_time'],
@@ -556,8 +584,6 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('login'))
 
-        
-
 # Initialize database
 def init_db():
     with app.app_context():
@@ -664,7 +690,6 @@ def init_db():
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday', 4),
                 (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4),
             ]
-
         
             for course in mock_courses:
                 if not Course.query.filter_by(crn=course[0]).first():

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Schedules - Drexel Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
+    <style>
+        body { background-color: #07294E; color: #fff; font-family: Arial, sans-serif; }
+        .container { display: flex; }
+        .sidebar, .main-content { padding: 20px; }
+        .sidebar { background: #003087; width: 200px; }
+        .sidebar-menu a { color: #FFD700; text-decoration: none; }
+        .navbar { background: #003087; padding: 10px; }
+        .nav-links a { color: #FFD700; margin-left: 15px; }
+        .comparison-container { position: relative; overflow: hidden; }
+        .schedule-table-wrapper { overflow-x: auto; }
+        .schedule-table { width: 100%; border-collapse: collapse; }
+        .schedule-table th, .schedule-table td { border: 1px solid #FFD700; padding: 10px; text-align: left; }
+        .schedule-table th { background: #003087; }
+        .schedule-table td ul { list-style: none; padding: 0; }
+        .arrow-btn { background: #FFD700; border: none; padding: 10px; cursor: pointer; position: absolute; top: 50%; transform: translateY(-50%); }
+        .left-arrow { left: 0; }
+        .right-arrow { right: 0; }
+        .action-btn { background: #FFD700; color: #07294E; border: none; padding: 5px 10px; cursor: pointer; }
+        .generate-btn { background: #FFD700; color: #07294E; padding: 10px 20px; text-decoration: none; display: inline-block; }
+        @media (max-width: 768px) {
+            .schedule-table { min-width: 600px; }
+            .arrow-btn { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('schedule') }}">Generate Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
+                <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="navbar">
+                <span class="time" aria-label="Current time display">8 AM</span>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                </ul>
+            </div>
+            <h1>Compare Schedules</h1>
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <p class="flash-{{ category }}">{{ message }}</p>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% if schedules and schedules|length == 3 %}
+                <div class="comparison-container">
+                    <button class="arrow-btn left-arrow" aria-label="Scroll left">&#9664;</button>
+                    <div class="schedule-table-wrapper">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Details</th>
+                                    <th>Schedule 1</th>
+                                    <th>Schedule 2</th>
+                                    <th>Schedule 3</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Courses</strong></td>
+                                    {% for schedule in schedules %}
+                                        <td>
+                                            <ul>
+                                                {% for course in schedule.courses %}
+                                                    <li>{{ course.course_code }}: {{ course.course_name }} ({{ course.day }} {{ course.start_time }}-{{ course.end_time }})</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Credits</strong></td>
+                                    {% for schedule in schedules %}
+                                        <td>{{ schedule.total_credits }}</td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td><strong>Time Range</strong></td>
+                                    {% for schedule in schedules %}
+                                        <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td><strong>Spacing</strong></td>
+                                    {% for schedule in schedules %}
+                                        <td>{{ schedule.spacing }}</td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td><strong>Actions</strong></td>
+                                    {% for i in range(3) %}
+                                        <td>
+                                            <form action="{{ url_for('save_schedule', index=i) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="action-btn">Save</button>
+                                            </form>
+                                            <form action="{{ url_for('toggle_favorite', index=i) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="action-btn favorite-btn">Favorite</button>
+                                            </form>
+                                            <form action="{{ url_for('set_priority', index=i) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="action-btn priority-btn">Priority</button>
+                                            </form>
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="arrow-btn right-arrow" aria-label="Scroll right">&#9654;</button>
+                </div>
+                <a href="{{ url_for('schedule') }}" class="generate-btn">Generate Again</a>
+            {% else %}
+                <p class="no-schedule">No schedules available to compare. Please generate schedules first.</p>
+            {% endif %}
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    <script>
+        const wrapper = document.querySelector('.schedule-table-wrapper');
+        const leftArrow = document.querySelector('.left-arrow');
+        const rightArrow = document.querySelector('.right-arrow');
+
+        leftArrow.addEventListener('click', () => {
+            wrapper.scrollLeft -= 200;
+        });
+
+        rightArrow.addEventListener('click', () => {
+            wrapper.scrollLeft += 200;
+        });
+    </script>
+</body>
+</html>

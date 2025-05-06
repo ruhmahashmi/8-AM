@@ -1,4 +1,3 @@
-/* static/styles.css */
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -158,7 +157,7 @@ form input:focus, form select:focus {
     background-color: rgba(7, 41, 78, 0.9);
 }
 
-button, .generate-btn, .action-btn {
+button, .generate-btn, .action-btn, .variant-btn {
     background: linear-gradient(135deg, #FFD700, #FFC107);
     color: #07294E;
     border: none;
@@ -173,13 +172,13 @@ button, .generate-btn, .action-btn {
     letter-spacing: 1px;
 }
 
-button:hover, .generate-btn:hover, .action-btn:hover {
+button:hover, .generate-btn:hover, .action-btn:hover, .variant-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     background: linear-gradient(135deg, #FFE44D, #FFD700);
 }
 
-button:active, .generate-btn:active, .action-btn:active {
+button:active, .generate-btn:active, .action-btn:active, .variant-btn:active {
     transform: translateY(1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
@@ -474,7 +473,7 @@ button:active, .generate-btn:active, .action-btn:active {
 }
 
 /* Uniform Button Styling */
-.export-btn {
+.export-btn, .variant-btn {
     background: linear-gradient(135deg, #FFD700, #FFC107);
     color: #07294E;
     border: none;
@@ -487,143 +486,3 @@ button:active, .generate-btn:active, .action-btn:active {
     width: 180px;
     height: 48px;
     line-height: 1.2;
-    text-align: center;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.export-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #FFE44D, #FFD700);
-}
-
-/* Export Calendar Button and Dropdown */
-.export-calendar-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.export-calendar-btn {
-    width: 180px;
-    height: 48px;
-}
-
-/* Dropdown styling */
-.calendar-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    min-width: 180px;
-    z-index: 10;
-    overflow: hidden;
-}
-
-.calendar-dropdown a {
-    display: block;
-    padding: 12px 15px;
-    color: #07294E;
-    text-decoration: none;
-    font-size: 1em;
-    transition: all 0.3s ease;
-    border-bottom: 1px solid rgba(7, 41, 78, 0.1);
-}
-
-.calendar-dropdown a:last-child {
-    border-bottom: none;
-}
-
-.calendar-dropdown a:hover {
-    background: linear-gradient(135deg, #FFD700, #FFC107);
-    color: #07294E;
-}
-
-.export-calendar-container:hover .calendar-dropdown,
-.export-calendar-btn[aria-expanded="true"] + .calendar-dropdown {
-    display: block;
-    animation: fadeIn 0.3s ease-out forwards;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Accessibility Enhancements */
-.export-btn:focus {
-    outline: 2px solid #FFFFFF;
-    outline-offset: 2px;
-}
-
-.calendar-dropdown a:focus {
-    outline: 2px solid #07294E;
-    background: linear-gradient(135deg, #FFD700, #FFC107);
-}
-
-/* Make sure regenerate-btn is visible when needed */
-.regenerate-btn {
-    display: inline-block;
-}
-
-/* Added labels for better clarity */
-.course-label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: #FFFFFF;
-}
-
-/* Make form elements evenly sized */
-.form-group {
-    margin-bottom: 20px;
-}
-
-/* Time input styling consistency */
-.time-input {
-    display: flex;
-    gap: 15px;
-}
-
-.time-input input {
-    flex: 1;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .container {
-        flex-direction: column;
-        margin: 10px;
-    }
-    
-    .sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 5px solid white;
-    }
-    
-    .profile-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .button-container {
-        flex-direction: column;
-    }
-    
-    .time-column {
-        width: 70px;
-    }
-}
