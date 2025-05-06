@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 import os
 import base64
-from sqlalchemy import text
+from sqlalchemy import text3
 
 # Flask app setup
 app = Flask(__name__)
