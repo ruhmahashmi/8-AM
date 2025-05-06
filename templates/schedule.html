@@ -5,6 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Schedule - Drexel Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Custom styles for the searchable dropdown */
+        .select-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .search-dropdown {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            z-index: 1000;
+            display: none;
+            border-radius: 0 0 4px 4px;
+        }
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+        .visible {
+            display: block;
+        }
+        .hidden-select {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -36,13 +84,19 @@
                     <div class="course-selection" id="course-selection">
                         <!-- Initially show 5 course selection fields -->
                         {% for i in range(1, 6) %}
-                            <label for="course{{ i }}">Course {{ i }}</label>
-                            <select name="course{{ i }}" id="course{{ i }}">
-                                <option value="">Select a course</option>
-                                {% for course in courses %}
-                                    <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="select-container">
+                                <label for="course{{ i }}">Course {{ i }}</label>
+                                <div class="search-dropdown">
+                                    <input type="text" class="search-input" id="search{{ i }}" placeholder="Search or select a course" autocomplete="off">
+                                    <div class="dropdown-list" id="dropdown{{ i }}"></div>
+                                </div>
+                                <select name="course{{ i }}" id="course{{ i }}" class="hidden-select">
+                                    <option value="">Select a course</option>
+                                    {% for course in courses %}
+                                        <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         {% endfor %}
                     </div>
                     <!-- Button to add more course fields -->
@@ -83,24 +137,128 @@
         document.getElementById('addCourseBtn').addEventListener('click', function() {
             courseCount++;
             
-            // Create a new label and select element for the course
+            // Create a new container for the course
+            const container = document.createElement('div');
+            container.className = 'select-container';
+            
+            // Create label
             const newCourseLabel = document.createElement('label');
             newCourseLabel.setAttribute('for', `course${courseCount}`);
             newCourseLabel.textContent = `Course ${courseCount}`;
             
+            // Create search dropdown
+            const searchDropdown = document.createElement('div');
+            searchDropdown.className = 'search-dropdown';
+            
+            // Create search input
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'search-input';
+            searchInput.id = `search${courseCount}`;
+            searchInput.placeholder = 'Search or select a course';
+            searchInput.autocomplete = 'off';
+            
+            // Create dropdown list
+            const dropdownList = document.createElement('div');
+            dropdownList.className = 'dropdown-list';
+            dropdownList.id = `dropdown${courseCount}`;
+            
+            // Create hidden select
             const newCourseSelect = document.createElement('select');
             newCourseSelect.name = `course${courseCount}`;
             newCourseSelect.id = `course${courseCount}`;
+            newCourseSelect.className = 'hidden-select';
             newCourseSelect.innerHTML = `<option value="">Select a course</option>
                 {% for course in courses %}
                     <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
                 {% endfor %}`;
             
-            // Append the new label and select to the course selection container
+            // Append elements to container
+            searchDropdown.appendChild(searchInput);
+            searchDropdown.appendChild(dropdownList);
+            container.appendChild(newCourseLabel);
+            container.appendChild(searchDropdown);
+            container.appendChild(newCourseSelect);
+            
+            // Append the container to the course selection
             const courseSelection = document.getElementById('course-selection');
-            courseSelection.appendChild(newCourseLabel);
-            courseSelection.appendChild(newCourseSelect);
+            courseSelection.appendChild(container);
+            
+            // Initialize the search functionality for the new field
+            initializeSearch(courseCount);
         });
+
+        // Function to initialize search functionality for a field
+        function initializeSearch(index) {
+            const searchInput = document.getElementById(`search${index}`);
+            const dropdownList = document.getElementById(`dropdown${index}`);
+            const select = document.getElementById(`course${index}`);
+            
+            // Function to populate dropdown list based on search
+            function populateDropdown(searchText) {
+                // Clear previous items
+                dropdownList.innerHTML = '';
+                
+                // Get all options from the select
+                const options = Array.from(select.options);
+                
+                // Filter options based on search text
+                const filteredOptions = options.filter(option => {
+                    if (!option.value) return false; // Skip the empty option
+                    return option.text.toLowerCase().includes(searchText.toLowerCase());
+                });
+                
+                // Add filtered options to dropdown
+                filteredOptions.forEach(option => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    item.textContent = option.text;
+                    item.setAttribute('data-value', option.value);
+                    
+                    item.addEventListener('click', function() {
+                        searchInput.value = option.text;
+                        select.value = option.value;
+                        dropdownList.classList.remove('visible');
+                    });
+                    
+                    dropdownList.appendChild(item);
+                });
+                
+                // Show dropdown if we have results
+                if (filteredOptions.length > 0) {
+                    dropdownList.classList.add('visible');
+                } else {
+                    dropdownList.classList.remove('visible');
+                }
+            }
+            
+            // Event listeners
+            searchInput.addEventListener('focus', function() {
+                populateDropdown(this.value);
+            });
+            
+            searchInput.addEventListener('input', function() {
+                populateDropdown(this.value);
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !dropdownList.contains(e.target)) {
+                    dropdownList.classList.remove('visible');
+                }
+            });
+            
+            // Initialize with course text if a value is already selected
+            if (select.value) {
+                const selectedOption = select.options[select.selectedIndex];
+                searchInput.value = selectedOption.text;
+            }
+        }
+        
+        // Initialize search for initial fields
+        for (let i = 1; i <= 5; i++) {
+            initializeSearch(i);
+        }
     </script>
 </body>
 </html>
