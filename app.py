@@ -43,6 +43,7 @@ class Course(db.Model):
     start_time = db.Column(db.String(10), nullable=False)
     end_time = db.Column(db.String(10), nullable=False)
     day = db.Column(db.String(10), nullable=False)
+    credits = db.Column(db.Integer, nullable=False, default=3)
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -292,18 +293,15 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-
-    # Fetch distinct courses by course_code and course_name
-    courses = db.session.query(Course.course_code, Course.course_name).distinct(Course.course_code).order_by(Course.course_code).all()
-    # Convert the result into a list of objects with course_code and course_name attributes
+    # Fetch distinct courses by course_code, course_name, and credits
+    courses = db.session.query(Course.course_code, Course.course_name, Course.credits).distinct(Course.course_code).order_by(Course.course_code).all()
+    # Convert the result into a list of objects with course_code, course_name, and credits
     class CourseObj:
-        def __init__(self, course_code, course_name):
+        def __init__(self, course_code, course_name, credits):
             self.course_code = course_code
             self.course_name = course_name
-    courses = [CourseObj(course[0], course[1]) for course in courses]
-
-    courses = Course.query.all()
-    print(courses)
+            self.credits = credits
+    courses = [CourseObj(course[0], course[1], course[2]) for course in courses]
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -336,6 +334,17 @@ def save_schedule():
             flash('Please select at least one course.', 'error')
             return redirect(url_for('schedule'))
 
+        # Calculate total credits for unique courses
+        unique_courses = list(set(courses_selected))
+        course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+        total_credits = sum(course.credits for course in course_credits)
+        logger.debug(f"Total credits for {unique_courses}: {total_credits}")
+
+        # Validate credit limit
+        if total_credits > 20:
+            flash(f'Total credits ({total_credits}) exceed 20. Please select fewer courses.', 'error')
+            return redirect(url_for('schedule'))
+
         # Validate time range
         start_minutes = time_to_minutes(start_time)
         end_minutes = time_to_minutes(end_time)
@@ -354,6 +363,7 @@ def save_schedule():
             session['start_time'] = start_time
             session['end_time'] = end_time
             session['spacing'] = spacing
+            session['total_credits'] = total_credits  # Store total credits
             flash('Schedule generated successfully! Save it to keep it.', 'success')
             return redirect(url_for('display_schedule'))
         else:
@@ -364,7 +374,38 @@ def save_schedule():
         flash('An unexpected error occurred. Please try again.', 'error')
         return redirect(url_for('schedule'))
 
-    
+@app.route('/save_variant', methods=['POST'])
+@login_required
+def save_variant():
+    try:
+        schedule = session.get('schedule')
+        if not schedule:
+            logger.error(f"No schedule to save as variant for user {current_user.id}")
+            flash('No schedule to save as variant.', 'error')
+            return jsonify({'success': False, 'message': 'No schedule to save.'}), 400
+
+        # Initialize or retrieve schedule_variants
+        if 'schedule_variants' not in session:
+            session['schedule_variants'] = []
+        
+        # Check if max variants reached
+        if len(session['schedule_variants']) >= 3:
+            logger.debug(f"Max variants (3) reached for user {current_user.id}")
+            flash('Maximum 3 variants saved. Generate a new schedule to replace one.', 'error')
+            return jsonify({'success': False, 'message': 'Maximum 3 variants saved.'}), 400
+
+        # Append schedule to variants
+        session['schedule_variants'].append(schedule)
+        variant_number = len(session['schedule_variants'])
+        session.modified = True
+        logger.info(f"Schedule saved as variant {variant_number} for user {current_user.id}")
+        flash(f'Schedule saved as variant {variant_number}', 'success')
+        return jsonify({'success': True, 'message': f'Schedule saved as variant {variant_number}'}), 200
+    except Exception as e:
+        logger.error(f"Error saving variant for user {current_user.id}: {str(e)}")
+        flash('Error saving variant. Please try again.', 'error')
+        return jsonify({'success': False, 'message': 'Error saving variant.'}), 500
+
 @app.route('/save_current_schedule', methods=['POST'])
 @login_required
 def save_current_schedule():
@@ -419,18 +460,46 @@ def saved_schedules():
                 Schedule.created_at.desc()
             ).all()
         
-        return render_template('saved_schedules.html', schedules=schedules)
+        # Calculate total credits for each schedule
+        schedules_with_credits = []
+        for schedule in schedules:
+            # Extract courses from the schedule (remove None values)
+            courses = [course for course in [
+                schedule.course1, schedule.course2, schedule.course3,
+                schedule.course4, schedule.course5
+            ] if course]
+            # Get unique course codes
+            unique_courses = list(set(courses))
+            # Query credits for these courses
+            course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+            total_credits = sum(course.credits for course in course_credits) if course_credits else 0
+            # Create a dictionary to pass to the template
+            schedule_dict = {
+                'id': schedule.id,
+                'courses': courses,
+                'start_time': schedule.start_time,
+                'end_time': schedule.end_time,
+                'spacing': schedule.spacing,
+                'created_at': schedule.created_at,
+                'is_favorite': schedule.is_favorite,
+                'is_priority': schedule.is_priority,
+                'total_credits': total_credits  # Add total credits to the schedule data
+            }
+            schedules_with_credits.append(schedule_dict)
+        
+        return render_template('saved_schedules.html', schedules=schedules_with_credits)
     except Exception as e:
         logger.error(f"Error fetching saved schedules for user {current_user.id}: {str(e)}")
         flash('Error loading saved schedules. Please try again.', 'error')
         return redirect(url_for('dashboard'))
-
+    
 @app.route('/admin/add_course', methods=['GET', 'POST'])
 @login_required
 def add_course():
     if request.method == 'POST':
         try:
             course = Course(
+                crn=request.form['crn'],
                 course_code=request.form['course_code'],
                 course_name=request.form['course_name'],
                 start_time=request.form['start_time'],
@@ -556,8 +625,6 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('login'))
 
-        
-
 # Initialize database
 def init_db():
     with app.app_context():
@@ -662,14 +729,13 @@ def init_db():
                 (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00PM', 'Friday', 4),
                 (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday', 4),
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday', 4),
-                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4),
+                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4)
             ]
-
         
             for course in mock_courses:
                 if not Course.query.filter_by(crn=course[0]).first():
                     db.session.add(Course(crn=course[0], course_code=course[1], course_name=course[2],
-                                         start_time=course[3], end_time=course[4], day=course[5]))
+                                         start_time=course[3], end_time=course[4], day=course[5], credits=course[6]))
                     inserted += 1
         db.session.commit()
         logger.info(f"Database initialized with {inserted} new courses")

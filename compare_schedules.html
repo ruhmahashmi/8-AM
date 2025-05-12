@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Schedules - Drexel Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
+                <li><a href="#">My Courses</a></li>
+                <li><a href="#">My Progress</a></li>
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <nav class="navbar">
+                <span class="time">8 AM</span>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    <li><a href="#">Courses</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+            <h1>Compare Schedules</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <div class="scheduler-container">
+                <div class="schedule-grid">
+                    {% for schedule_data in compare_schedules %}
+                        <div class="schedule-card" aria-labelledby="schedule-{{ loop.index }}">
+                            <h2 id="schedule-{{ loop.index }}">Schedule {{ loop.index }}</h2>
+                            <p><strong>Courses:</strong> {{ schedule_data.courses_selected|join(', ') }}</p>
+                            <p><strong>Time Range:</strong> {{ schedule_data.start_time }} - {{ schedule_data.end_time }}</p>
+                            <p><strong>Spacing:</strong> {{ schedule_data.spacing }}</p>
+                            <table class="compare-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        {% for day in days %}
+                                            <th>{{ day }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for time in time_slots %}
+                                        <tr>
+                                            <td>{{ time }}</td>
+                                            {% for day in days %}
+                                                <td>
+                                                    {% for item in schedule_data.schedule %}
+                                                        {% if item[0] == day and item[3] == time %}
+                                                            {{ item[1] }} - {{ item[2] }}<br>{{ item[3] }} - {{ item[4] }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('schedule') }}" class="generate-btn">Back to Schedule</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
