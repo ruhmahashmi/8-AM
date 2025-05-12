@@ -293,14 +293,15 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-    # Fetch distinct courses by course_code and course_name
-    courses = db.session.query(Course.course_code, Course.course_name).distinct(Course.course_code).order_by(Course.course_code).all()
-    # Convert the result into a list of objects with course_code and course_name attributes
+    # Fetch distinct courses by course_code, course_name, and credits
+    courses = db.session.query(Course.course_code, Course.course_name, Course.credits).distinct(Course.course_code).order_by(Course.course_code).all()
+    # Convert the result into a list of objects with course_code, course_name, and credits
     class CourseObj:
-        def __init__(self, course_code, course_name):
+        def __init__(self, course_code, course_name, credits):
             self.course_code = course_code
             self.course_name = course_name
-    courses = [CourseObj(course[0], course[1]) for course in courses]
+            self.credits = credits
+    courses = [CourseObj(course[0], course[1], course[2]) for course in courses]
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -333,6 +334,17 @@ def save_schedule():
             flash('Please select at least one course.', 'error')
             return redirect(url_for('schedule'))
 
+        # Calculate total credits for unique courses
+        unique_courses = list(set(courses_selected))
+        course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+        total_credits = sum(course.credits for course in course_credits)
+        logger.debug(f"Total credits for {unique_courses}: {total_credits}")
+
+        # Validate credit limit
+        if total_credits > 20:
+            flash(f'Total credits ({total_credits}) exceed 20. Please select fewer courses.', 'error')
+            return redirect(url_for('schedule'))
+
         # Validate time range
         start_minutes = time_to_minutes(start_time)
         end_minutes = time_to_minutes(end_time)
@@ -351,6 +363,7 @@ def save_schedule():
             session['start_time'] = start_time
             session['end_time'] = end_time
             session['spacing'] = spacing
+            session['total_credits'] = total_credits  # Store total credits
             flash('Schedule generated successfully! Save it to keep it.', 'success')
             return redirect(url_for('display_schedule'))
         else:
@@ -447,12 +460,39 @@ def saved_schedules():
                 Schedule.created_at.desc()
             ).all()
         
-        return render_template('saved_schedules.html', schedules=schedules)
+        # Calculate total credits for each schedule
+        schedules_with_credits = []
+        for schedule in schedules:
+            # Extract courses from the schedule (remove None values)
+            courses = [course for course in [
+                schedule.course1, schedule.course2, schedule.course3,
+                schedule.course4, schedule.course5
+            ] if course]
+            # Get unique course codes
+            unique_courses = list(set(courses))
+            # Query credits for these courses
+            course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+            total_credits = sum(course.credits for course in course_credits) if course_credits else 0
+            # Create a dictionary to pass to the template
+            schedule_dict = {
+                'id': schedule.id,
+                'courses': courses,
+                'start_time': schedule.start_time,
+                'end_time': schedule.end_time,
+                'spacing': schedule.spacing,
+                'created_at': schedule.created_at,
+                'is_favorite': schedule.is_favorite,
+                'is_priority': schedule.is_priority,
+                'total_credits': total_credits  # Add total credits to the schedule data
+            }
+            schedules_with_credits.append(schedule_dict)
+        
+        return render_template('saved_schedules.html', schedules=schedules_with_credits)
     except Exception as e:
         logger.error(f"Error fetching saved schedules for user {current_user.id}: {str(e)}")
         flash('Error loading saved schedules. Please try again.', 'error')
         return redirect(url_for('dashboard'))
-
+    
 @app.route('/admin/add_course', methods=['GET', 'POST'])
 @login_required
 def add_course():
@@ -594,106 +634,6 @@ def init_db():
         inserted = 0
         if Course.query.count() == 0:
             mock_courses = [
-                (10001, 'CS 164', 'Intro to Computer Science', '08:00AM', '09:00AM', 'Monday'),
-                (10002, 'CS 164', 'Intro to Computer Science', '10:00AM', '11:00AM', 'Wednesday'),
-                (10003, 'CS 164', 'Intro to Computer Science', '02:00PM', '03:00PM', 'Friday'),
-                (10004, 'MATH 121', 'Calculus I', '09:00AM', '10:00AM', 'Tuesday'),
-                (10005, 'MATH 121', 'Calculus I', '11:00AM', '12:00PM', 'Thursday'),
-                (10006, 'MATH 121', 'Calculus I', '01:00PM', '02:00PM', 'Monday'),
-                (10007, 'ENGL 101', 'Composition and Rhetoric I', '10:00AM', '11:00AM', 'Monday'),
-                (10008, 'ENGL 101', 'Composition and Rhetoric I', '01:00PM', '02:00PM', 'Wednesday'),
-                (10009, 'ENGL 101', 'Composition and Rhetoric I', '03:00PM', '04:00PM', 'Friday'),
-                (10010, 'CHEM 101', 'General Chemistry I', '08:00AM', '09:00AM', 'Thursday'),
-                (10011, 'CHEM 101', 'General Chemistry I', '12:00PM', '01:00PM', 'Tuesday'),
-                (10012, 'CHEM 101', 'General Chemistry I', '02:00PM', '03:00PM', 'Wednesday'),
-                (10013, 'COOP 101', 'Career Management', '09:00AM', '10:00AM', 'Friday'),
-                (10014, 'COOP 101', 'Career Management', '11:00AM', '12:00PM', 'Monday'),
-                (10015, 'COOP 101', 'Career Management', '03:00PM', '04:00PM', 'Tuesday'),
-                (10016, 'UNIV 101', 'The Drexel Experience', '08:00AM', '09:00AM', 'Wednesday'),
-                (10017, 'UNIV 101', 'The Drexel Experience', '12:00PM', '01:00PM', 'Friday'),
-                (10018, 'UNIV 101', 'The Drexel Experience', '01:00PM', '02:00PM', 'Thursday'),
-                (10019, 'CS 171', 'Computer Programming I', '08:00AM', '09:00AM', 'Monday'),
-                (10020, 'CS 171', 'Computer Programming I', '10:00AM', '11:00AM', 'Wednesday'),
-                (10021, 'CS 171', 'Computer Programming I', '02:00PM', '03:00PM', 'Friday'),
-                (10022, 'CS 175', 'Advanced Computer Programming I', '09:00AM', '10:00AM', 'Monday'),
-                (10023, 'CS 175', 'Advanced Computer Programming I', '11:00AM', '12:00PM', 'Wednesday'),
-                (10024, 'CS 175', 'Advanced Computer Programming I', '01:00PM', '02:00PM', 'Friday'),
-                (10025, 'CS 172', 'Computer Programming II', '10:00AM', '11:00AM', 'Monday'),
-                (10026, 'CS 172', 'Computer Programming II', '12:00PM', '01:00PM', 'Wednesday'),
-                (10027, 'CS 172', 'Computer Programming II', '02:00PM', '03:00PM', 'Friday'),
-                (10028, 'CS 260', 'Data Structures', '09:00AM', '10:00AM', 'Tuesday'),
-                (10029, 'CS 260', 'Data Structures', '01:00PM', '02:00PM', 'Thursday'),
-                (10030, 'CS 260', 'Data Structures', '03:00PM', '04:00PM', 'Friday'),
-                (10031, 'CS 265', 'Advanced Programming Tools and Techniques', '08:00AM', '09:00AM', 'Tuesday'),
-                (10032, 'CS 265', 'Advanced Programming Tools and Techniques', '10:00AM', '11:00AM', 'Thursday'),
-                (10033, 'CS 265', 'Advanced Programming Tools and Techniques', '02:00PM', '03:00PM', 'Friday'),
-                (10034, 'CS 270', 'Mathematical Foundations of Computer Science', '11:00AM', '12:00PM', 'Tuesday'),
-                (10035, 'CS 270', 'Mathematical Foundations of Computer Science', '01:00PM', '02:00PM', 'Thursday'),
-                (10036, 'CS 270', 'Mathematical Foundations of Computer Science', '03:00PM', '04:00PM', 'Friday'),
-                (10037, 'CS 277', 'Algorithms and Analysis', '08:00AM', '09:00AM', 'Wednesday'),
-                (10038, 'CS 277', 'Algorithms and Analysis', '10:00AM', '11:00AM', 'Thursday'),
-                (10039, 'CS 277', 'Algorithms and Analysis', '02:00PM', '03:00PM', 'Friday'),
-                (10040, 'CS 281', 'Systems Architecture', '09:00AM', '10:00AM', 'Tuesday'),
-                (10041, 'CS 281', 'Systems Architecture', '01:00PM', '02:00PM', 'Thursday'),
-                (10042, 'CS 281', 'Systems Architecture', '03:00PM', '04:00PM', 'Friday'),
-                (10043, 'CS 283', 'Systems Programming', '08:00AM', '09:00AM', 'Monday'),
-                (10044, 'CS 283', 'Systems Programming', '10:00AM', '11:00AM', 'Wednesday'),
-                (10045, 'CS 283', 'Systems Programming', '02:00PM', '03:00PM', 'Friday'),
-                (10046, 'CS 360', 'Programming Language Concepts', '09:00AM', '10:00AM', 'Tuesday'),
-                (10047, 'CS 360', 'Programming Language Concepts', '11:00AM', '12:00PM', 'Thursday'),
-                (10048, 'CS 360', 'Programming Language Concepts', '01:00PM', '02:00PM', 'Friday'),
-                (10049, 'SE 181', 'Introduction to Software Engineering and Development', '08:00AM', '09:00AM', 'Monday'),
-                (10050, 'SE 181', 'Introduction to Software Engineering and Development', '10:00AM', '11:00AM', 'Wednesday'),
-                (10051, 'SE 181', 'Introduction to Software Engineering and Development', '01:00PM', '02:00PM', 'Friday'),
-                (10052, 'SE 201', 'Introduction to Software Engineering and Development', '09:00AM', '10:00AM', 'Tuesday'),
-                (10053, 'SE 201', 'Introduction to Software Engineering and Development', '11:00AM', '12:00PM', 'Thursday'),
-                (10054, 'SE 201', 'Introduction to Software Engineering and Development', '01:00PM', '02:00PM', 'Friday'),
-                (10055, 'SE 310', 'Software Architecture I', '08:00AM', '09:00AM', 'Monday'),
-                (10056, 'SE 310', 'Software Architecture I', '10:00AM', '11:00AM', 'Wednesday'),
-                (10057, 'SE 310', 'Software Architecture I', '02:00PM', '03:00PM', 'Friday'),
-                (10058, 'COM 230', 'Techniques of Speaking', '09:00AM', '10:00AM', 'Monday'),
-                (10059, 'COM 230', 'Techniques of Speaking', '11:00AM', '12:00PM', 'Wednesday'),
-                (10060, 'COM 230', 'Techniques of Speaking', '02:00PM', '03:00PM', 'Friday'),
-                (10061, 'ENGL 111', 'English Composition I', '08:00AM', '09:00AM', 'Tuesday'),
-                (10062, 'ENGL 111', 'English Composition I', '10:00AM', '11:00AM', 'Thursday'),
-                (10063, 'ENGL 111', 'English Composition I', '01:00PM', '02:00PM', 'Friday'),
-                (10064, 'ENGL 112', 'Composition and Rhetoric II', '09:00AM', '10:00AM', 'Wednesday'),
-                (10065, 'ENGL 112', 'Composition and Rhetoric II', '12:00PM', '01:00PM', 'Monday'),
-                (10066, 'ENGL 112', 'Composition and Rhetoric II', '03:00PM', '04:00PM', 'Thursday'),
-                (10067, 'ENGL 113', 'Composition and Rhetoric III', '08:00AM', '09:00AM', 'Friday'),
-                (10068, 'ENGL 113', 'Composition and Rhetoric III', '11:00AM', '12:00PM', 'Tuesday'),
-                (10069, 'ENGL 113', 'Composition and Rhetoric III', '02:00PM', '03:00PM', 'Monday'),
-                (10070, 'PHIL 311', 'Ethics and Information Technology', '10:00AM', '11:00AM', 'Tuesday'),
-                (10071, 'PHIL 311', 'Ethics and Information Technology', '01:00PM', '02:00PM', 'Wednesday'),
-                (10072, 'PHIL 311', 'Ethics and Information Technology', '03:00PM', '04:00PM', 'Thursday'),
-                (10073, 'ENGL 102', 'Composition and Rhetoric II', '08:00AM', '09:00AM', 'Monday'),
-                (10074, 'ENGL 102', 'Composition and Rhetoric II', '10:00AM', '11:00AM', 'Wednesday'),
-                (10075, 'ENGL 102', 'Composition and Rhetoric II', '02:00PM', '03:00PM', 'Tuesday'),
-                (10076, 'ENGL 103', 'Composition and Rhetoric III', '09:00AM', '10:00AM', 'Thursday'),
-                (10077, 'ENGL 103', 'Composition and Rhetoric III', '12:00PM', '01:00PM', 'Wednesday'),
-                (10078, 'ENGL 103', 'Composition and Rhetoric III', '03:00PM', '04:00PM', 'Monday'),
-                (10079, 'CI 101', 'Computing and Informatics Design I', '08:00AM', '9:00AM', 'Monday'),
-                (10080, 'CI 101', 'Computing and Informatics Design I', '01:00PM', '02:00PM', 'Wednesday'),
-                (10081, 'CI 101', 'Computing and Informatics Design I', '09:00AM', '10:00AM', 'Friday'),
-                (10082, 'CI 102', 'Computing and Informatics Design II', '10:00AM', '11:00PM', 'Monday'),
-                (10083, 'CI 102', 'Computing and Informatics Design II', '02:00PM', '03:00PM', 'Wednesday'),
-                (10084, 'CI 102', 'Computing and Informatics Design II', '11:00AM', '12:00PM', 'Friday'),
-                (10085, 'CI 103', 'Computing and Informatics Design III', '08:00AM', '9:00AM', 'Tuesday'),
-                (10086, 'CI 103', 'Computing and Informatics Design III', '01:00PM', '02:00PM', 'Thursday'),
-                (10087, 'CI 103', 'Computing and Informatics Design III', '09:00AM', '10:00AM', 'Friday'),
-                (10088, 'CI 491 [WI]', 'Senior Project I', '10:00AM', '11:00AM', 'Monday'),
-                (10089, 'CI 491 [WI]', 'Senior Project I', '02:00PM', '03:00PM', 'Wednesday'),
-                (10090, 'CI 491 [WI]', 'Senior Project I', '01:00PM', '02:00PM', 'Friday'),
-                (10091, 'CI 492 [WI]', 'Senior Project II', '08:00AM', '09:00AM', 'Tuesday'),
-                (10092, 'CI 492 [WI]', 'Senior Project II', '01:00PM', '02:00PM', 'Thursday'),
-                (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00PM', 'Friday'),
-                (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday'),
-                (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday'),
-                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday'),
-                10097, ('CI 101', 'The Drexel Experience', '09:00AM', '10:00AM', 'Monday'),
-                10098, ('CI 120', 'CCI Transfer Student Seminar', '11:00AM', '12:00PM', 'Wednesday'),
-                10099, ('CIVC 101', 'Introduction to Civic Engagement', '02:00PM', '03:00PM', 'Friday'),
-                10100, ('COOP 101', 'Career Management and Professional Development **', '10:00AM', '11:00AM', 'Tuesday'),
                 (10001, 'CS 164', 'Intro to Computer Science', '08:00AM', '09:00AM', 'Monday', 3),
                 (10002, 'CS 164', 'Intro to Computer Science', '10:00AM', '11:00AM', 'Wednesday', 3),
                 (10003, 'CS 164', 'Intro to Computer Science', '02:00PM', '03:00PM', 'Friday', 3),
@@ -789,13 +729,13 @@ def init_db():
                 (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00PM', 'Friday', 4),
                 (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday', 4),
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday', 4),
-                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4),
+                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4)
             ]
         
             for course in mock_courses:
                 if not Course.query.filter_by(crn=course[0]).first():
                     db.session.add(Course(crn=course[0], course_code=course[1], course_name=course[2],
-                                         start_time=course[3], end_time=course[4], day=course[5]))
+                                         start_time=course[3], end_time=course[4], day=course[5], credits=course[6]))
                     inserted += 1
         db.session.commit()
         logger.info(f"Database initialized with {inserted} new courses")
