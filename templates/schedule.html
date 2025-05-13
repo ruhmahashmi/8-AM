@@ -90,18 +90,22 @@
                                     <input type="text" class="search-input" id="search{{ i }}" placeholder="Search or select a course" autocomplete="off">
                                     <div class="dropdown-list" id="dropdown{{ i }}"></div>
                                 </div>
-                                <select name="course{{ i }}" id="course{{ i }}" class="hidden-select">
-                                    <option value="">Select a course</option>
+                                <select name="course{{ i }}" id="course{{ i }}" class="hidden-select" onchange="updateCreditTotal()">
+                                    <option value="" data-credits="0">Select a course</option>
                                     {% for course in courses %}
-                                        <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
+                                        <option value="{{ course.course_code }}" data-credits="{{ course.credits }}">{{ course.course_code }} - {{ course.course_name }} ({{ course.credits }} credits)</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         {% endfor %}
                     </div>
+                    <!-- Display total credits -->
+                    <div id="credit-total">
+                        Total Credits: <span id="credit-count">0</span> (Max 20)
+                    </div>
                     <!-- Button to add more course fields -->
                     <button type="button" id="addCourseBtn" class="add-course-btn">Add More Course</button>
-
+                
                     <h2>Preferences</h2>
                     <label for="startTime">Preferred Start Time</label>
                     <select name="startTime" id="startTime" required>
@@ -120,7 +124,7 @@
                         <option value="04:00PM">4:00 PM</option>
                     </select>
                     <label for="spacing">Course Spacing</label>
-                    <select name="spacing" id="spacing">
+                    <select name="spacing" id="spacing" required>
                         <option value="compact">Compact</option>
                         <option value="spaced-out">Spaced Out</option>
                     </select>
@@ -133,7 +137,7 @@
     <script>
         // Function to add new course selection fields
         let courseCount = 5; // Start with 5 courses
-
+    
         document.getElementById('addCourseBtn').addEventListener('click', function() {
             courseCount++;
             
@@ -168,9 +172,10 @@
             newCourseSelect.name = `course${courseCount}`;
             newCourseSelect.id = `course${courseCount}`;
             newCourseSelect.className = 'hidden-select';
-            newCourseSelect.innerHTML = `<option value="">Select a course</option>
+            newCourseSelect.setAttribute('onchange', 'updateCreditTotal()');
+            newCourseSelect.innerHTML = `<option value="" data-credits="0">Select a course</option>
                 {% for course in courses %}
-                    <option value="{{ course.course_code }}">{{ course.course_code }} - {{ course.course_name }}</option>
+                    <option value="{{ course.course_code }}" data-credits="{{ course.credits }}">{{ course.course_code }} - {{ course.course_name }} ({{ course.credits }} credits)</option>
                 {% endfor %}`;
             
             // Append elements to container
@@ -187,7 +192,7 @@
             // Initialize the search functionality for the new field
             initializeSearch(courseCount);
         });
-
+    
         // Function to initialize search functionality for a field
         function initializeSearch(index) {
             const searchInput = document.getElementById(`search${index}`);
@@ -219,6 +224,7 @@
                         searchInput.value = option.text;
                         select.value = option.value;
                         dropdownList.classList.remove('visible');
+                        updateCreditTotal();
                     });
                     
                     dropdownList.appendChild(item);
@@ -255,10 +261,66 @@
             }
         }
         
+        // Function to update total credits display
+        function updateCreditTotal() {
+            let totalCredits = 0;
+            const uniqueCourses = new Set();
+            for (let i = 1; i <= courseCount; i++) {
+                const select = document.getElementById(`course${i}`);
+                if (select && select.value && !uniqueCourses.has(select.value)) {
+                    const credits = parseInt(select.options[select.selectedIndex].getAttribute('data-credits')) || 0;
+                    totalCredits += credits;
+                    uniqueCourses.add(select.value);
+                }
+            }
+            const creditCount = document.getElementById('credit-count');
+            creditCount.textContent = totalCredits;
+            if (totalCredits > 20) {
+                creditCount.classList.add('red');
+                alert('Total credits exceed 20. Please select fewer courses.');
+            } else {
+                creditCount.classList.remove('red');
+            }
+        }
+        
         // Initialize search for initial fields
         for (let i = 1; i <= 5; i++) {
             initializeSearch(i);
         }
+    
+        // Validate form before submission
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            let hasCourse = false;
+            for (let i = 1; i <= courseCount; i++) {
+                const select = document.getElementById(`course${i}`);
+                if (select && select.value && select.value !== "") {
+                    hasCourse = true;
+                    break;
+                }
+            }
+            if (!hasCourse) {
+                e.preventDefault();
+                alert('Please select at least one course.');
+            }
+            // Check credit total
+            let totalCredits = 0;
+            const uniqueCourses = new Set();
+            for (let i = 1; i <= courseCount; i++) {
+                const select = document.getElementById(`course${i}`);
+                if (select && select.value && !uniqueCourses.has(select.value)) {
+                    const credits = parseInt(select.options[select.selectedIndex].getAttribute('data-credits')) || 0;
+                    totalCredits += credits;
+                    uniqueCourses.add(select.value);
+                }
+            }
+            if (totalCredits > 20) {
+                e.preventDefault();
+                alert('Total credits exceed 20. Please select fewer courses.');
+            }
+        });
+    
+        // Initialize credit total on page load
+        updateCreditTotal();
     </script>
 </body>
 </html>
