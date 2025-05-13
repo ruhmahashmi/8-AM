@@ -613,6 +613,7 @@ def display_schedule():
     schedule_id = request.args.get('schedule_id', session.get('schedule_id'), type=int)
     logger.debug(f"Schedule ID: {schedule_id}, source: {'request.args' if request.args.get('schedule_id') else 'session' if session.get('schedule_id') else 'none'}")
     schedule = session.get('schedule', [])
+    total_credits = 0
 
     if schedule_id:
         saved_schedule = Schedule.query.get(schedule_id)
@@ -635,6 +636,11 @@ def display_schedule():
                 session['start_time'] = saved_schedule.start_time
                 session['end_time'] = saved_schedule.end_time
                 session['spacing'] = saved_schedule.spacing
+                # Calculate total credits
+                course_credits = Course.query.filter(Course.course_code.in_(courses_selected)).distinct(Course.course_code).all()
+                total_credits = sum(course.credits for course in course_credits)
+                logger.debug(f"Calculated total credits: {total_credits}")  # Debug log
+                session['total_credits'] = total_credits
                 logger.info(f"Regenerated schedule ID {schedule_id} for user {current_user.id}")
             else:
                 logger.warning(f"Failed to regenerate schedule ID {schedule_id}")
@@ -646,6 +652,16 @@ def display_schedule():
             flash('Invalid schedule ID or unauthorized access. Please generate a new schedule.', 'error')
             logger.info("Redirecting to /schedule due to invalid schedule ID")
             return redirect(url_for('schedule'))
+    else:
+        # If no schedule_id, get total credits from session and courses
+        courses_selected = session.get('courses_selected', [])
+        if courses_selected:
+            course_credits = Course.query.filter(Course.course_code.in_(courses_selected)).distinct(Course.course_code).all()
+            total_credits = sum(course.credits for course in course_credits)
+            logger.debug(f"Calculated total credits from session: {total_credits}")  # Debug log
+        else:
+            total_credits = session.get('total_credits', 0)
+            logger.debug(f"Got total credits from session: {total_credits}")  # Debug log
 
     if not schedule:
         logger.error(f"No schedule available for user {current_user.id}")
@@ -653,8 +669,8 @@ def display_schedule():
         logger.info("Redirecting to /schedule due to no schedule")
         return redirect(url_for('schedule'))
 
-    logger.info(f"Displaying schedule for user {current_user.id}, schedule_id={schedule_id}")
-    return render_template('schedule_result.html', schedule=schedule, schedule_id=schedule_id, time_to_minutes=time_to_minutes)
+    logger.info(f"Displaying schedule for user {current_user.id}, schedule_id={schedule_id}, total_credits={total_credits}")
+    return render_template('schedule_result.html', schedule=schedule, schedule_id=schedule_id, time_to_minutes=time_to_minutes, total_credits=total_credits)
 
 @app.route('/delete_schedule/<int:schedule_id>', methods=['POST'])
 @login_required

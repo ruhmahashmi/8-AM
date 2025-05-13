@@ -108,12 +108,16 @@
     </div>
     <script>
         const schedule = JSON.parse('{{ schedule | tojson | safe }}');
-        const totalCredits = {{ session.get('total_credits', 0) | tojson }};
+        const totalCredits = parseInt('{{ total_credits }}');
+        console.log('Total Credits:', totalCredits); // Debug log
         
         if (totalCredits > 20) {
+            console.log('Credits exceeded, showing warning'); // Debug log
             const creditWarning = document.getElementById('creditWarning');
             creditWarning.textContent = `Warning: Total credits (${totalCredits}) exceed the maximum limit of 20 credits.`;
             creditWarning.style.display = 'block';
+            creditWarning.style.backgroundColor = '#ffebee';
+            creditWarning.style.color = '#c62828';
         }
         
         if (!Array.isArray(schedule) || schedule.length === 0) {
