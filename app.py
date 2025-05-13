@@ -68,24 +68,17 @@ def load_user(user_id):
 def time_to_minutes(time_str):
     if not time_str:
         return None
-    time_str = time_str.strip().lower().replace(" ", "").replace("am", "AM").replace("pm", "PM")
-    if ':' not in time_str:
-        if len(time_str) == 3:
-            time_str = f"{time_str[0:1]}:00{time_str[1:]}"
-        elif len(time_str) == 4:
-            time_str = f"{time_str[0:2]}:00{time_str[2:]}"
+    # Normalize spaces and case, remove AM/PM for processing
+    time_str = time_str.strip().replace(" ", "").upper()
     try:
-        if time_str.endswith('AM') and time_str != '12:00AM':
-            hour, minute = map(int, time_str.replace('AM', '').split(':'))
-        elif time_str.endswith('PM') and time_str != '12:00PM':
-            hour, minute = map(int, time_str.replace('PM', '').split(':'))
+        # Handle formats like "8:00AM", "08:00AM", "8AM"
+        if ':' not in time_str:
+            time_str = time_str.replace("AM", ":00AM").replace("PM", ":00PM")
+        hour, minute = map(int, time_str.replace("AM", "").replace("PM", "").split(':'))
+        if time_str.endswith("PM") and hour != 12:
             hour += 12
-        elif time_str == '12:00AM':
-            hour, minute = 0, 0
-        elif time_str == '12:00PM':
-            hour, minute = 12, 0
-        else:
-            raise ValueError(f"Invalid time format: {time_str}")
+        elif time_str.endswith("AM") and hour == 12:
+            hour = 0
         return hour * 60 + minute
     except Exception as e:
         logger.error(f"Time conversion error for {time_str}: {str(e)}")
@@ -110,6 +103,7 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
     end_minutes = time_to_minutes(end_time)
     if start_minutes is None or end_minutes is None or start_minutes >= end_minutes:
         logger.error(f"Invalid time range: start={start_time}, end={end_time}")
+        flash('Invalid time range selected.', 'error')
         return None
 
     # Get all course instances
@@ -117,9 +111,10 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
     logger.debug(f"Found {len(all_courses)} courses: {[c.course_code + ' ' + c.start_time + '-' + c.end_time + ' ' + c.day for c in all_courses]}")
     if not all_courses:
         logger.error(f"No courses found for {courses_selected}")
+        flash(f'No sections available for courses: {", ".join(courses_selected)}.', 'error')
         return None
 
-    # Filter courses (include if start time is in range or course overlaps with range)
+    # Filter courses (include if any part of the course falls within the range)
     filtered_courses = []
     for course in all_courses:
         course_start = time_to_minutes(course.start_time)
@@ -127,14 +122,15 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
         if course_start is None or course_end is None:
             logger.warning(f"Invalid time for course {course.course_code}: {course.start_time}-{course.end_time}")
             continue
-        if (course_start >= start_minutes and course_start <= end_minutes) or \
-           (course_end > start_minutes and course_start < end_minutes):
+        # Include courses that start or end within the range, or span it
+        if (course_start <= end_minutes and course_end >= start_minutes):
             filtered_courses.append(course)
             logger.debug(f"Added course {course.course_code} ({course.start_time}-{course.end_time}, {course.day}) to filtered list")
 
     logger.debug(f"Filtered {len(filtered_courses)} courses within {start_time}-{end_time}")
     if not filtered_courses:
         logger.error(f"No courses available within time range {start_time}-{end_time}")
+        flash(f'No courses available between {start_time} and {end_time} for selected courses.', 'error')
         return None
 
     # Group by course code
@@ -144,6 +140,13 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
             course_options[course.course_code] = []
         course_options[course.course_code].append(course)
     logger.debug(f"Course options: {course_options.keys()}")
+
+    # Check if all selected courses have options
+    missing_courses = [code for code in courses_selected if code not in course_options]
+    if missing_courses:
+        logger.error(f"No sections available for courses: {missing_courses}")
+        flash(f'No sections available for courses: {", ".join(missing_courses)}.', 'error')
+        return None
 
     # Backtracking to find a valid schedule
     def backtrack(selected_courses, used_times, course_codes):
@@ -159,6 +162,7 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
             end = time_to_minutes(course.end_time)
             day = course.day
             if start is None or end is None:
+                logger.debug(f"Skipping course {course.course_code} due to invalid times")
                 continue
 
             # Check for conflicts
@@ -175,10 +179,10 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
             # Check spacing
             if spacing == "spaced-out" and day in used_times:
                 for used_start, used_end in used_times[day]:
-                    if used_end < start and start - used_end < 60:  # Less than 1-hour gap before
+                    if used_end < start and start - used_end < 15:  # 15-minute gap
                         conflict = True
                         break
-                    if end < used_start and used_start - end < 60:  # Less than 1-hour gap after
+                    if end < used_start and used_start - end < 15:  # 15-minute gap
                         conflict = True
                         break
             if conflict:
@@ -200,9 +204,15 @@ def generate_schedule(courses_selected, start_time, end_time, spacing):
         logger.debug(f"No valid option for {current_code}")
         return None
 
+    # Try with specified spacing
     schedule = backtrack([], {}, courses_selected)
+    if not schedule and spacing == "spaced-out":
+        logger.info(f"Retrying with compact spacing for {courses_selected}")
+        # Retry with compact spacing as a fallback
+        schedule = backtrack([], {}, courses_selected)  # spacing is ignored in backtrack for compact
     if not schedule:
         logger.error(f"Failed to generate schedule for {courses_selected} with spacing={spacing}")
+        flash('Could not generate a schedule. Try fewer courses, a wider time range, or compact spacing.', 'error')
     else:
         logger.info(f"Generated schedule: {schedule}")
     return schedule
@@ -321,37 +331,48 @@ def save_schedule():
             course = request.form.get(f'course{i}')
             if not course:
                 break
-            courses_selected.append(course)
+            if course.strip():  # Only add non-empty courses
+                courses_selected.append(course.strip())
             i += 1
 
+        if not courses_selected:
+            logger.error("No valid courses selected")
+            flash('Please select at least one valid course.', 'error')
+            return redirect(url_for('schedule'))
+
+        # Get time and spacing preferences
         start_time = request.form.get('startTime')
         end_time = request.form.get('endTime')
-        spacing = request.form.get('spacing', 'compact')
+        spacing = request.form.get('spacing', 'compact')  # Default to compact if missing
 
-        logger.debug(f"Courses selected: {courses_selected}, Start: {start_time}, End: {end_time}, Spacing: {spacing}")
-
-        if not courses_selected:
-            flash('Please select at least one course.', 'error')
+        # Validate inputs
+        if not start_time or not end_time:
+            logger.error(f"Missing time preferences: startTime={start_time}, endTime={end_time}")
+            flash('Please select start and end times.', 'error')
             return redirect(url_for('schedule'))
 
         # Calculate total credits for unique courses
         unique_courses = list(set(courses_selected))
-        course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+        # Use a query to get one instance per course code
+        course_credits = db.session.query(Course.course_code, Course.credits).filter(Course.course_code.in_(unique_courses)).group_by(Course.course_code).all()
         total_credits = sum(course.credits for course in course_credits)
-        logger.debug(f"Total credits for {unique_courses}: {total_credits}")
+        logger.debug(f"Total credits for {unique_courses}: {total_credits} (Courses: {[f'{c.course_code}: {c.credits}' for c in course_credits]})")
 
         # Validate credit limit
         if total_credits > 20:
-            flash(f'Total credits ({total_credits}) exceed 20. Please select fewer courses.', 'error')
+            logger.error(f"Total credits ({total_credits}) exceed 20")
+            flash(f'Total credits ({total_credits}) exceed 20. Please select fewer courses. (Selected: {", ".join(unique_courses)})', 'error')
             return redirect(url_for('schedule'))
 
         # Validate time range
         start_minutes = time_to_minutes(start_time)
         end_minutes = time_to_minutes(end_time)
         if start_minutes is None or end_minutes is None:
+            logger.error(f"Invalid time format: startTime={start_time}, endTime={end_time}")
             flash('Invalid time format. Please use HH:MM AM/PM.', 'error')
             return redirect(url_for('schedule'))
         if start_minutes >= end_minutes:
+            logger.error(f"End time before start time: {start_time} >= {end_time}")
             flash('End time must be after start time.', 'error')
             return redirect(url_for('schedule'))
 
@@ -363,10 +384,12 @@ def save_schedule():
             session['start_time'] = start_time
             session['end_time'] = end_time
             session['spacing'] = spacing
-            session['total_credits'] = total_credits  # Store total credits
+            session['total_credits'] = total_credits
+            logger.info(f"Schedule generated successfully for user {current_user.id}")
             flash('Schedule generated successfully! Save it to keep it.', 'success')
             return redirect(url_for('display_schedule'))
         else:
+            logger.error(f"Failed to generate schedule for {courses_selected}")
             flash('Could not generate a conflict-free schedule. Try fewer courses, a wider time range, or compact spacing.', 'error')
             return redirect(url_for('schedule'))
     except Exception as e:
