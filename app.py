@@ -414,7 +414,7 @@ def save_current_schedule():
     start_time = session.get('start_time')
     end_time = session.get('end_time')
     spacing = session.get('spacing')
-    
+
     if not schedule or not courses_selected:
         logger.error(f"No schedule or courses to save for user {current_user.id}")
         return jsonify({'success': False, 'message': 'No schedule to save.'}), 400
@@ -436,8 +436,15 @@ def save_current_schedule():
     db.session.commit()
     logger.info(f"Schedule ID {new_schedule.id} saved for user {current_user.id}")
 
-    session['schedule_id'] = new_schedule.id
+    # Save the schedule ID to session for comparison
+    if 'compare_schedules' not in session:
+        session['schedule_comparison'] = []
+    
+    session['schedule_comparison'].append(new_schedule.id)
+    session.modified = True
+
     return jsonify({'success': True, 'message': f'Schedule #{new_schedule.id} saved successfully!'}), 200
+
 
 @app.route('/saved_schedules')
 @login_required
@@ -492,6 +499,52 @@ def saved_schedules():
         logger.error(f"Error fetching saved schedules for user {current_user.id}: {str(e)}")
         flash('Error loading saved schedules. Please try again.', 'error')
         return redirect(url_for('dashboard'))
+
+@app.route('/compare_schedules', methods=['GET'])
+@login_required
+def compare_schedules():
+    try:
+        # Get the schedules to compare from session
+        compare_schedules = session.get('compare_schedules', [])
+        
+        if not compare_schedules:
+            flash('No schedules selected for comparison.', 'error')
+            return redirect(url_for('saved_schedules'))
+
+        # Fetch course data for each schedule and calculate total credits
+        schedules_with_details = []
+        for schedule_id in compare_schedules:
+            schedule = Schedule.query.get(schedule_id)
+            if schedule and schedule.user_id == current_user.id:
+                # Extract courses from the schedule (remove None values)
+                courses = [course for course in [
+                    schedule.course1, schedule.course2, schedule.course3,
+                    schedule.course4, schedule.course5
+                ] if course]
+                
+                # Get unique course codes
+                unique_courses = list(set(courses))
+                # Query credits for these courses
+                course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+                total_credits = sum(course.credits for course in course_credits) if course_credits else 0
+
+                schedule_dict = {
+                    'id': schedule.id,
+                    'courses': courses,
+                    'start_time': schedule.start_time,
+                    'end_time': schedule.end_time,
+                    'spacing': schedule.spacing,
+                    'created_at': schedule.created_at,
+                    'total_credits': total_credits
+                }
+                schedules_with_details.append(schedule_dict)
+        
+        return render_template('schedule_comparison.html', schedules=schedules_with_details)
+
+    except Exception as e:
+        logger.error(f"Error comparing schedules for user {current_user.id}: {str(e)}")
+        flash('Error comparing schedules. Please try again.', 'error')
+        return redirect(url_for('saved_schedules'))
     
 @app.route('/admin/add_course', methods=['GET', 'POST'])
 @login_required
