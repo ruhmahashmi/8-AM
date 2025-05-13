@@ -7,6 +7,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .credit-warning {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #ef9a9a;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -32,6 +45,7 @@
                 </ul>
             </nav>
             <h1>Your Schedule</h1>
+            <div id="creditWarning" class="credit-warning"></div>
             <div id="scheduleContainer" class="schedule-container">
                 {% if schedule and schedule|length > 0 %}
                     <div class="schedule-grid">
@@ -94,6 +108,14 @@
     </div>
     <script>
         const schedule = JSON.parse('{{ schedule | tojson | safe }}');
+        const totalCredits = {{ session.get('total_credits', 0) | tojson }};
+        
+        if (totalCredits > 20) {
+            const creditWarning = document.getElementById('creditWarning');
+            creditWarning.textContent = `Warning: Total credits (${totalCredits}) exceed the maximum limit of 20 credits.`;
+            creditWarning.style.display = 'block';
+        }
+        
         if (!Array.isArray(schedule) || schedule.length === 0) {
             console.warn("Schedule is empty or invalid:", schedule);
         }
