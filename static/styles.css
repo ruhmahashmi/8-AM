@@ -502,3 +502,55 @@ button:active, .generate-btn:active, .action-btn:active, .variant-btn:active {
 #credit-count.red {
     color: red;
 }
+
+/* Table Styles for Courses Page */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+thead {
+    background: linear-gradient(135deg, #FFD700, #FFC107);
+    color: #07294E;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 1.1em;
+}
+
+th {
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+tbody tr {
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    color: #FFD700;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+tbody tr:hover {
+    background-color: rgba(255, 215, 0, 0.1);
+}
+
+/* Add or adjust in styles.css */
+.filter-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.course-select-container {
+    flex-grow: 1; /* Allows the search input to expand */
+}

@@ -7,17 +7,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .credit-warning {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #ef9a9a;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="sidebar">
             <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
-                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li> <!-- Changed from 'views.schedule' -->
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
-                <li><a href="#">My Courses</a></li>
+                <li><a href="{{ url_for('courses') }}">My Courses</a></li>
                 <li><a href="#">My Progress</a></li>
-                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li> <!-- Changed from 'views.profile' -->
             </ul>
         </div>
         <div class="main-content">
@@ -32,6 +45,7 @@
                 </ul>
             </nav>
             <h1>Your Schedule</h1>
+            <div id="creditWarning" class="credit-warning"></div>
             <div id="scheduleContainer" class="schedule-container">
                 {% if schedule and schedule|length > 0 %}
                     <div class="schedule-grid">
@@ -94,6 +108,18 @@
     </div>
     <script>
         const schedule = JSON.parse('{{ schedule | tojson | safe }}');
+        const totalCredits = parseInt('{{ total_credits }}');
+        console.log('Total Credits:', totalCredits); // Debug log
+        
+        if (totalCredits > 20) {
+            console.log('Credits exceeded, showing warning'); // Debug log
+            const creditWarning = document.getElementById('creditWarning');
+            creditWarning.textContent = `Warning: Total credits (${totalCredits}) exceed the maximum limit of 20 credits.`;
+            creditWarning.style.display = 'block';
+            creditWarning.style.backgroundColor = '#ffebee';
+            creditWarning.style.color = '#c62828';
+        }
+        
         if (!Array.isArray(schedule) || schedule.length === 0) {
             console.warn("Schedule is empty or invalid:", schedule);
         }

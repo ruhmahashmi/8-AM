@@ -303,15 +303,18 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-    # Fetch distinct courses by course_code, course_name, and credits
-    courses = db.session.query(Course.course_code, Course.course_name, Course.credits).distinct(Course.course_code).order_by(Course.course_code).all()
+    # Fetch distinct courses by course_code, selecting the first course_name and credits for each
+    courses = db.session.query(Course.course_code, Course.course_name, Course.credits)\
+                       .group_by(Course.course_code)\
+                       .order_by(Course.course_code).all()
     # Convert the result into a list of objects with course_code, course_name, and credits
     class CourseObj:
         def __init__(self, course_code, course_name, credits):
             self.course_code = course_code
             self.course_name = course_name
-            self.credits = credits
+            self.credits = credits if credits is not None else 3  # Default to 3 if credits is None
     courses = [CourseObj(course[0], course[1], course[2]) for course in courses]
+    logger.debug(f"Fetched {len(courses)} courses for schedule: {[c.course_code for c in courses]}")
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -636,6 +639,7 @@ def display_schedule():
     schedule_id = request.args.get('schedule_id', session.get('schedule_id'), type=int)
     logger.debug(f"Schedule ID: {schedule_id}, source: {'request.args' if request.args.get('schedule_id') else 'session' if session.get('schedule_id') else 'none'}")
     schedule = session.get('schedule', [])
+    total_credits = 0
 
     if schedule_id:
         saved_schedule = Schedule.query.get(schedule_id)
@@ -658,6 +662,11 @@ def display_schedule():
                 session['start_time'] = saved_schedule.start_time
                 session['end_time'] = saved_schedule.end_time
                 session['spacing'] = saved_schedule.spacing
+                # Calculate total credits
+                course_credits = Course.query.filter(Course.course_code.in_(courses_selected)).distinct(Course.course_code).all()
+                total_credits = sum(course.credits for course in course_credits)
+                logger.debug(f"Calculated total credits: {total_credits}")  # Debug log
+                session['total_credits'] = total_credits
                 logger.info(f"Regenerated schedule ID {schedule_id} for user {current_user.id}")
             else:
                 logger.warning(f"Failed to regenerate schedule ID {schedule_id}")
@@ -669,6 +678,16 @@ def display_schedule():
             flash('Invalid schedule ID or unauthorized access. Please generate a new schedule.', 'error')
             logger.info("Redirecting to /schedule due to invalid schedule ID")
             return redirect(url_for('schedule'))
+    else:
+        # If no schedule_id, get total credits from session and courses
+        courses_selected = session.get('courses_selected', [])
+        if courses_selected:
+            course_credits = Course.query.filter(Course.course_code.in_(courses_selected)).distinct(Course.course_code).all()
+            total_credits = sum(course.credits for course in course_credits)
+            logger.debug(f"Calculated total credits from session: {total_credits}")  # Debug log
+        else:
+            total_credits = session.get('total_credits', 0)
+            logger.debug(f"Got total credits from session: {total_credits}")  # Debug log
 
     if not schedule:
         logger.error(f"No schedule available for user {current_user.id}")
@@ -676,8 +695,8 @@ def display_schedule():
         logger.info("Redirecting to /schedule due to no schedule")
         return redirect(url_for('schedule'))
 
-    logger.info(f"Displaying schedule for user {current_user.id}, schedule_id={schedule_id}")
-    return render_template('schedule_result.html', schedule=schedule, schedule_id=schedule_id, time_to_minutes=time_to_minutes)
+    logger.info(f"Displaying schedule for user {current_user.id}, schedule_id={schedule_id}, total_credits={total_credits}")
+    return render_template('schedule_result.html', schedule=schedule, schedule_id=schedule_id, time_to_minutes=time_to_minutes, total_credits=total_credits)
 
 @app.route('/delete_schedule/<int:schedule_id>', methods=['POST'])
 @login_required
@@ -694,6 +713,21 @@ def delete_schedule(schedule_id):
     flash(f'Schedule #{schedule_id} deleted successfully.', 'success')
     return redirect(url_for('saved_schedules'))
 
+@app.route('/courses')
+@login_required
+def courses():
+    courses = db.session.query(Course.course_code, Course.course_name, Course.credits)\
+                       .group_by(Course.course_code)\
+                       .order_by(Course.course_code).all()
+    class CourseObj:
+        def __init__(self, course_code, course_name, credits):
+            self.course_code = course_code
+            self.course_name = course_name
+            self.credits = credits if credits is not None else 3
+    courses = [CourseObj(course[0], course[1], course[2]) for course in courses]
+    logger.debug(f"Courses fetched: {[course.course_code for course in courses]}")
+    return render_template('courses.html', user=current_user, courses=courses)
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -706,7 +740,6 @@ def init_db():
     with app.app_context():
         db.create_all()
         logger.debug("Initializing database with mock courses")
-
         inserted = 0
         if Course.query.count() == 0:
             mock_courses = [
@@ -788,13 +821,13 @@ def init_db():
                 (10076, 'ENGL 103', 'Composition and Rhetoric III', '09:00AM', '10:00AM', 'Thursday', 3),
                 (10077, 'ENGL 103', 'Composition and Rhetoric III', '12:00PM', '01:00PM', 'Wednesday', 3),
                 (10078, 'ENGL 103', 'Composition and Rhetoric III', '03:00PM', '04:00PM', 'Monday', 3),
-                (10079, 'CI 101', 'Computing and Informatics Design I', '08:00AM', '9:00AM', 'Monday', 3),
+                (10079, 'CI 101', 'Computing and Informatics Design I', '08:00AM', '09:00AM', 'Monday', 3),
                 (10080, 'CI 101', 'Computing and Informatics Design I', '01:00PM', '02:00PM', 'Wednesday', 3),
                 (10081, 'CI 101', 'Computing and Informatics Design I', '09:00AM', '10:00AM', 'Friday', 3),
-                (10082, 'CI 102', 'Computing and Informatics Design II', '10:00AM', '11:00PM', 'Monday', 3),
+                (10082, 'CI 102', 'Computing and Informatics Design II', '10:00AM', '11:00AM', 'Monday', 3),
                 (10083, 'CI 102', 'Computing and Informatics Design II', '02:00PM', '03:00PM', 'Wednesday', 3),
                 (10084, 'CI 102', 'Computing and Informatics Design II', '11:00AM', '12:00PM', 'Friday', 3),
-                (10085, 'CI 103', 'Computing and Informatics Design III', '08:00AM', '9:00AM', 'Tuesday', 3),
+                (10085, 'CI 103', 'Computing and Informatics Design III', '08:00AM', '09:00AM', 'Tuesday', 3),
                 (10086, 'CI 103', 'Computing and Informatics Design III', '01:00PM', '02:00PM', 'Thursday', 3),
                 (10087, 'CI 103', 'Computing and Informatics Design III', '09:00AM', '10:00AM', 'Friday', 3),
                 (10088, 'CI 491 [WI]', 'Senior Project I', '10:00AM', '11:00AM', 'Monday', 4),
@@ -802,10 +835,94 @@ def init_db():
                 (10090, 'CI 491 [WI]', 'Senior Project I', '01:00PM', '02:00PM', 'Friday', 4),
                 (10091, 'CI 492 [WI]', 'Senior Project II', '08:00AM', '09:00AM', 'Tuesday', 4),
                 (10092, 'CI 492 [WI]', 'Senior Project II', '01:00PM', '02:00PM', 'Thursday', 4),
-                (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00PM', 'Friday', 4),
+                (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00AM', 'Friday', 4),
                 (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday', 4),
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday', 4),
-                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4)
+                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4),
+                # BIO 131 - Cells and Biomolecules (1-hour lectures)
+                (10097, 'BIO 131', 'Cells and Biomolecules', '09:00AM', '10:00AM', 'Monday', 3),
+                (10098, 'BIO 131', 'Cells and Biomolecules', '11:00AM', '12:00PM', 'Wednesday', 3),
+                (10099, 'BIO 131', 'Cells and Biomolecules', '02:00PM', '03:00PM', 'Friday', 3),
+
+                # BIO 134 - Cells and Biomolecules Lab (2-hour labs)
+                (10100, 'BIO 134', 'Cells and Biomolecules Lab', '08:00AM', '10:00AM', 'Tuesday',2),
+                (10101, 'BIO 134', 'Cells and Biomolecules Lab', '01:00PM', '03:00PM', 'Thursday',2),
+                (10102, 'BIO 134', 'Cells and Biomolecules Lab', '10:00AM', '12:00PM', 'Friday',2),
+
+                # BIO 132 - Genetics and Evolution (1-hour lectures)
+                (10103, 'BIO 132', 'Genetics and Evolution', '10:00AM', '11:00AM', 'Tuesday', 3),
+                (10104, 'BIO 132', 'Genetics and Evolution', '12:00PM', '01:00PM', 'Thursday', 3),
+                (10105, 'BIO 132', 'Genetics and Evolution', '03:00PM', '04:00PM', 'Monday', 3),
+
+                # BIO 135 - Genetics and Evolution Lab (2-hour labs)
+                (10106, 'BIO 135', 'Genetics and Evolution Lab', '09:00AM', '11:00AM', 'Wednesday',2),
+                (10107, 'BIO 135', 'Genetics and Evolution Lab', '02:00PM', '04:00PM', 'Tuesday',2),
+                (10108, 'BIO 135', 'Genetics and Evolution Lab', '11:00AM', '01:00PM', 'Friday',2),
+
+                # BIO 133 - Physiology and Ecology (1-hour lectures)
+                (10109, 'BIO 133', 'Physiology and Ecology', '08:00AM', '09:00AM', 'Friday', 3),
+                (10110, 'BIO 133', 'Physiology and Ecology', '01:00PM', '02:00PM', 'Wednesday', 3),
+                (10111, 'BIO 133', 'Physiology and Ecology', '10:00AM', '11:00AM', 'Tuesday', 3),
+
+                # BIO 136 - Anatomy and Ecology Lab (2-hour labs)
+                (10112, 'BIO 136', 'Anatomy and Ecology Lab', '10:00AM', '12:00PM', 'Monday',2),
+                (10113, 'BIO 136', 'Anatomy and Ecology Lab', '02:00PM', '04:00PM', 'Thursday',2),
+                (10114, 'BIO 136', 'Anatomy and Ecology Lab', '08:00AM', '10:00AM', 'Wednesday',2),
+
+                # CHEM 102 - General Chemistry II (1-hour lectures)
+                (10115, 'CHEM 102', 'General Chemistry II', '09:00AM', '10:00AM', 'Thursday', 3),
+                (10116, 'CHEM 102', 'General Chemistry II', '11:00AM', '12:00PM', 'Tuesday', 3),
+                (10117, 'CHEM 102', 'General Chemistry II', '01:00PM', '02:00PM', 'Friday', 3),
+
+                # CHEM 103 - General Chemistry III (1-hour lectures)
+                (10118, 'CHEM 103', 'General Chemistry III', '08:00AM', '09:00AM', 'Monday', 3),
+                (10119, 'CHEM 103', 'General Chemistry III', '12:00PM', '01:00PM', 'Wednesday', 3),
+                (10120, 'CHEM 103', 'General Chemistry III', '02:00PM', '03:00PM', 'Tuesday', 3),
+
+                # PHYS 101 - Fundamentals of Physics I (1-hour lectures)
+                (10121, 'PHYS 101', 'Fundamentals of Physics I', '10:00AM', '11:00AM', 'Friday', 3),
+                (10122, 'PHYS 101', 'Fundamentals of Physics I', '01:00PM', '02:00PM', 'Monday', 3),
+                (10123, 'PHYS 101', 'Fundamentals of Physics I', '03:00PM', '04:00PM', 'Wednesday', 3),
+
+                # PHYS 102 - Fundamentals of Physics II (1-hour lectures)
+                (10124, 'PHYS 102', 'Fundamentals of Physics II', '09:00AM', '10:00AM', 'Tuesday', 3),
+                (10125, 'PHYS 102', 'Fundamentals of Physics II', '11:00AM', '12:00PM', 'Thursday', 3),
+                (10126, 'PHYS 102', 'Fundamentals of Physics II', '02:00PM', '03:00PM', 'Monday', 3),
+
+                # PHYS 201 - Fundamentals of Physics III (1-hour lectures)
+                (10127, 'PHYS 201', 'Fundamentals of Physics III', '08:00AM', '09:00AM', 'Wednesday', 3),
+                (10128, 'PHYS 201', 'Fundamentals of Physics III', '12:00PM', '01:00PM', 'Friday', 3),
+                (10129, 'PHYS 201', 'Fundamentals of Physics III', '03:00PM', '04:00PM', 'Tuesday', 3),
+
+                # MATH 122 - Calculus II (1-hour lectures)
+                (10130, 'MATH 122', 'Calculus II', '09:00AM', '10:00AM', 'Monday', 4),
+                (10131, 'MATH 122', 'Calculus II', '11:00AM', '12:00PM', 'Wednesday', 4),
+                (10132, 'MATH 122', 'Calculus II', '02:00PM', '03:00PM', 'Friday', 4),
+
+                # MATH 123 - Calculus III (1-hour lectures)
+                (10133, 'MATH 123', 'Calculus III', '08:00AM', '09:00AM', 'Tuesday', 4),
+                (10134, 'MATH 123', 'Calculus III', '01:00PM', '02:00PM', 'Thursday', 4),
+                (10135, 'MATH 123', 'Calculus III', '10:00AM', '11:00AM', 'Friday', 4),
+
+                # MATH 200 - Multivariate Calculus (1-hour lectures)
+                (10136, 'MATH 200', 'Multivariate Calculus', '10:00AM', '11:00AM', 'Tuesday', 4),
+                (10137, 'MATH 200', 'Multivariate Calculus', '12:00PM', '01:00PM', 'Thursday', 4),
+                (10138, 'MATH 200', 'Multivariate Calculus', '03:00PM', '04:00PM', 'Monday', 4),
+
+                # MATH 201 - Linear Algebra (1-hour lectures)
+                (10139, 'MATH 201', 'Linear Algebra', '09:00AM', '10:00AM', 'Wednesday', 4),
+                (10140, 'MATH 201', 'Linear Algebra', '02:00PM', '03:00PM', 'Tuesday', 4),
+                (10141, 'MATH 201', 'Linear Algebra', '11:00AM', '12:00PM', 'Friday', 4),
+
+                # MATH 221 - Discrete Mathematics (1-hour lectures)
+                (10142, 'MATH 221', 'Discrete Mathematics', '08:00AM', '09:00AM', 'Friday', 4),
+                (10143, 'MATH 221', 'Discrete Mathematics', '01:00PM', '02:00PM', 'Wednesday', 4),
+                (10144, 'MATH 221', 'Discrete Mathematics', '10:00AM', '11:00AM', 'Tuesday', 4),
+
+                # MATH 311 - Probability and Statistics I (1-hour lectures)
+                (10145, 'MATH 311', 'Probability and Statistics I', '10:00AM', '11:00AM', 'Monday', 4),
+                (10146, 'MATH 311', 'Probability and Statistics I', '02:00PM', '03:00PM', 'Thursday', 4),
+                (10147, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Friday', 4)
             ]
         
             for course in mock_courses:
@@ -813,9 +930,9 @@ def init_db():
                     db.session.add(Course(crn=course[0], course_code=course[1], course_name=course[2],
                                          start_time=course[3], end_time=course[4], day=course[5], credits=course[6]))
                     inserted += 1
-        db.session.commit()
+                    logger.debug(f"Inserted course: {course[1]} (CRN: {course[0]})")
+            db.session.commit()
         logger.info(f"Database initialized with {inserted} new courses")
-
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5001)
