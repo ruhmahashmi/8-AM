@@ -61,7 +61,7 @@
             <ul class="sidebar-menu">
                 <li><a href="{{ url_for('schedule') }}" class="active">Schedule</a></li>
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
-                <li><a href="#">My Courses</a></li>
+                <li><a href="{{ url_for('courses') }}">My Courses</a></li>
                 <li><a href="#">My Progress</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
             </ul>
@@ -70,11 +70,11 @@
             <nav class="navbar">
                 <span class="time">8 AM</span>
                 <ul class="nav-links">
-                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
-                    <li><a href="#">Courses</a></li>
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li> 
+                    <li><a href="{{ url_for('courses') }}">Courses</a></li>
                     <li><a href="#">About</a></li>
-                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>  
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li> 
                 </ul>
             </nav>
             <h1>Create Your Schedule</h1>
@@ -93,7 +93,7 @@
                                 <select name="course{{ i }}" id="course{{ i }}" class="hidden-select" onchange="updateCreditTotal()">
                                     <option value="" data-credits="0">Select a course</option>
                                     {% for course in courses %}
-                                        <option value="{{ course.course_code }}" data-credits="{{ course.credits }}">{{ course.course_code }} - {{ course.course_name }} ({{ course.credits }} credits)</option>
+                                        <option value="{{ course.course_code }}" data-credits="{{ course.credits | default(3) }}">{{ course.course_code }} - {{ course.course_name }} ({{ course.credits | default(3) }} credits)</option>
                                     {% endfor %}
                                 </select>
                             </div>

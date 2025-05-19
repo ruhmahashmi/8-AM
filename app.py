@@ -303,15 +303,18 @@ def profile():
 @app.route('/schedule')
 @login_required
 def schedule():
-    # Fetch distinct courses by course_code, course_name, and credits
-    courses = db.session.query(Course.course_code, Course.course_name, Course.credits).distinct(Course.course_code).order_by(Course.course_code).all()
+    # Fetch distinct courses by course_code, selecting the first course_name and credits for each
+    courses = db.session.query(Course.course_code, Course.course_name, Course.credits)\
+                       .group_by(Course.course_code)\
+                       .order_by(Course.course_code).all()
     # Convert the result into a list of objects with course_code, course_name, and credits
     class CourseObj:
         def __init__(self, course_code, course_name, credits):
             self.course_code = course_code
             self.course_name = course_name
-            self.credits = credits
+            self.credits = credits if credits is not None else 3  # Default to 3 if credits is None
     courses = [CourseObj(course[0], course[1], course[2]) for course in courses]
+    logger.debug(f"Fetched {len(courses)} courses for schedule: {[c.course_code for c in courses]}")
     return render_template('schedule.html', user=current_user, courses=courses)
 
 @app.route('/save_schedule', methods=['POST'])
@@ -710,6 +713,21 @@ def delete_schedule(schedule_id):
     flash(f'Schedule #{schedule_id} deleted successfully.', 'success')
     return redirect(url_for('saved_schedules'))
 
+@app.route('/courses')
+@login_required
+def courses():
+    courses = db.session.query(Course.course_code, Course.course_name, Course.credits)\
+                       .group_by(Course.course_code)\
+                       .order_by(Course.course_code).all()
+    class CourseObj:
+        def __init__(self, course_code, course_name, credits):
+            self.course_code = course_code
+            self.course_name = course_name
+            self.credits = credits if credits is not None else 3
+    courses = [CourseObj(course[0], course[1], course[2]) for course in courses]
+    logger.debug(f"Courses fetched: {[course.course_code for course in courses]}")
+    return render_template('courses.html', user=current_user, courses=courses)
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -722,7 +740,6 @@ def init_db():
     with app.app_context():
         db.create_all()
         logger.debug("Initializing database with mock courses")
-
         inserted = 0
         if Course.query.count() == 0:
             mock_courses = [
@@ -804,13 +821,13 @@ def init_db():
                 (10076, 'ENGL 103', 'Composition and Rhetoric III', '09:00AM', '10:00AM', 'Thursday', 3),
                 (10077, 'ENGL 103', 'Composition and Rhetoric III', '12:00PM', '01:00PM', 'Wednesday', 3),
                 (10078, 'ENGL 103', 'Composition and Rhetoric III', '03:00PM', '04:00PM', 'Monday', 3),
-                (10079, 'CI 101', 'Computing and Informatics Design I', '08:00AM', '9:00AM', 'Monday', 3),
+                (10079, 'CI 101', 'Computing and Informatics Design I', '08:00AM', '09:00AM', 'Monday', 3),
                 (10080, 'CI 101', 'Computing and Informatics Design I', '01:00PM', '02:00PM', 'Wednesday', 3),
                 (10081, 'CI 101', 'Computing and Informatics Design I', '09:00AM', '10:00AM', 'Friday', 3),
-                (10082, 'CI 102', 'Computing and Informatics Design II', '10:00AM', '11:00PM', 'Monday', 3),
+                (10082, 'CI 102', 'Computing and Informatics Design II', '10:00AM', '11:00AM', 'Monday', 3),
                 (10083, 'CI 102', 'Computing and Informatics Design II', '02:00PM', '03:00PM', 'Wednesday', 3),
                 (10084, 'CI 102', 'Computing and Informatics Design II', '11:00AM', '12:00PM', 'Friday', 3),
-                (10085, 'CI 103', 'Computing and Informatics Design III', '08:00AM', '9:00AM', 'Tuesday', 3),
+                (10085, 'CI 103', 'Computing and Informatics Design III', '08:00AM', '09:00AM', 'Tuesday', 3),
                 (10086, 'CI 103', 'Computing and Informatics Design III', '01:00PM', '02:00PM', 'Thursday', 3),
                 (10087, 'CI 103', 'Computing and Informatics Design III', '09:00AM', '10:00AM', 'Friday', 3),
                 (10088, 'CI 491 [WI]', 'Senior Project I', '10:00AM', '11:00AM', 'Monday', 4),
@@ -818,7 +835,7 @@ def init_db():
                 (10090, 'CI 491 [WI]', 'Senior Project I', '01:00PM', '02:00PM', 'Friday', 4),
                 (10091, 'CI 492 [WI]', 'Senior Project II', '08:00AM', '09:00AM', 'Tuesday', 4),
                 (10092, 'CI 492 [WI]', 'Senior Project II', '01:00PM', '02:00PM', 'Thursday', 4),
-                (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00PM', 'Friday', 4),
+                (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00AM', 'Friday', 4),
                 (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday', 4),
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday', 4),
                 (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4),
@@ -913,9 +930,9 @@ def init_db():
                     db.session.add(Course(crn=course[0], course_code=course[1], course_name=course[2],
                                          start_time=course[3], end_time=course[4], day=course[5], credits=course[6]))
                     inserted += 1
-        db.session.commit()
+                    logger.debug(f"Inserted course: {course[1]} (CRN: {course[0]})")
+            db.session.commit()
         logger.info(f"Database initialized with {inserted} new courses")
-
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5001)
