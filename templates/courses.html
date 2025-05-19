@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
+                <li><a href="{{ url_for('courses') }}">My Courses</a></li>
+                <li><a href="#">My Progress</a></li>
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <nav class="navbar">
+                <span class="time">8 AM</span>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    <li><a href="{{ url_for('courses') }}">Courses</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+            <h1>My Courses</h1>
+            <div class="courses-container">
+                <!-- Search and Filter Section -->
+                <div class="filter-container" style="margin-bottom: 20px; display: flex; gap: 20px;">
+                    <div class="course-select-container">
+                        <input type="text" id="searchInput" class="search-course-input" placeholder="Search by course code or name...">
+                    </div>
+                    <select id="creditFilter" class="search-course-input">
+                        <option value="all">All Credits</option>
+                        <option value="3">3 Credits</option>
+                        <option value="4">4 Credits</option>
+                        <option value="5">5 Credits</option>
+                    </select>
+                </div>
+
+                {% if courses %}
+                    <table class="table table-striped" id="coursesTable">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th>Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                                <tr data-course-code="{{ course.course_code }}" data-course-name="{{ course.course_name }}" data-credits="{{ course.credits }}">
+                                    <td>{{ course.course_code }}</td>
+                                    <td>{{ course.course_name }}</td>
+                                    <td>{{ course.credits }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-center">No courses available at this time.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const creditFilter = document.getElementById('creditFilter');
+            const tableRows = document.querySelectorAll('#coursesTable tbody tr');
+
+            function filterTable() {
+                const searchValue = searchInput.value.toLowerCase();
+                const creditValue = creditFilter.value;
+
+                tableRows.forEach(row => {
+                    const courseCode = row.getAttribute('data-course-code').toLowerCase();
+                    const courseName = row.getAttribute('data-course-name').toLowerCase();
+                    const credits = row.getAttribute('data-credits');
+
+                    const matchesSearch = courseCode.includes(searchValue) || courseName.includes(searchValue);
+                    const matchesCredit = creditValue === 'all' || credits === creditValue;
+
+                    if (matchesSearch && matchesCredit) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', filterTable);
+            creditFilter.addEventListener('change', filterTable);
+        });
+    </script>
+</body>
+</html>

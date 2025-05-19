@@ -13,7 +13,7 @@
             <ul class="sidebar-menu">
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li> <!-- Changed from 'views.schedule' -->
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
-                <li><a href="#">My Courses</a></li>
+                <li><a href="{{ url_for('courses') }}">My Courses</a></li>
                 <li><a href="#">My Progress</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li> <!-- Changed from 'views.profile' -->
             </ul>
@@ -22,11 +22,11 @@
             <nav class="navbar">
                 <span class="time">8 AM</span>
                 <ul class="nav-links">
-                    <li><a href="{{ url_for('dashboard') }}">Home</a></li> <!-- Changed from 'views.home' -->
-                    <li><a href="#">Courses</a></li>
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li> 
+                    <li><a href="{{ url_for('courses') }}">Courses</a></li>
                     <li><a href="#">About</a></li>
-                    <li><a href="{{ url_for('profile') }}">Profile</a></li> <!-- Changed from 'views.profile' -->
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li> <!-- Changed from 'auth.logout' -->
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li> 
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li> 
                 </ul>
             </nav>
             <h1>Welcome, {{ userName }}!</h1>
