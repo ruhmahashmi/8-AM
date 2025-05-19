@@ -821,7 +821,91 @@ def init_db():
                 (10093, 'CI 492 [WI]', 'Senior Project II', '09:00AM', '10:00PM', 'Friday', 4),
                 (10094, 'CI 493 [WI]', 'Senior Project III', '10:00AM', '11:00AM', 'Monday', 4),
                 (10095, 'CI 493 [WI]', 'Senior Project III', '02:00PM', '03:00PM', 'Wednesday', 4),
-                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4)
+                (10096, 'CI 493 [WI]', 'Senior Project III', '01:00PM', '02:00PM', 'Friday', 4),
+                # BIO 131 - Cells and Biomolecules (1-hour lectures)
+                (10097, 'BIO 131', 'Cells and Biomolecules', '09:00AM', '10:00AM', 'Monday', 3),
+                (10098, 'BIO 131', 'Cells and Biomolecules', '11:00AM', '12:00PM', 'Wednesday', 3),
+                (10099, 'BIO 131', 'Cells and Biomolecules', '02:00PM', '03:00PM', 'Friday', 3),
+
+                # BIO 134 - Cells and Biomolecules Lab (2-hour labs)
+                (10100, 'BIO 134', 'Cells and Biomolecules Lab', '08:00AM', '10:00AM', 'Tuesday',2),
+                (10101, 'BIO 134', 'Cells and Biomolecules Lab', '01:00PM', '03:00PM', 'Thursday',2),
+                (10102, 'BIO 134', 'Cells and Biomolecules Lab', '10:00AM', '12:00PM', 'Friday',2),
+
+                # BIO 132 - Genetics and Evolution (1-hour lectures)
+                (10103, 'BIO 132', 'Genetics and Evolution', '10:00AM', '11:00AM', 'Tuesday', 3),
+                (10104, 'BIO 132', 'Genetics and Evolution', '12:00PM', '01:00PM', 'Thursday', 3),
+                (10105, 'BIO 132', 'Genetics and Evolution', '03:00PM', '04:00PM', 'Monday', 3),
+
+                # BIO 135 - Genetics and Evolution Lab (2-hour labs)
+                (10106, 'BIO 135', 'Genetics and Evolution Lab', '09:00AM', '11:00AM', 'Wednesday',2),
+                (10107, 'BIO 135', 'Genetics and Evolution Lab', '02:00PM', '04:00PM', 'Tuesday',2),
+                (10108, 'BIO 135', 'Genetics and Evolution Lab', '11:00AM', '01:00PM', 'Friday',2),
+
+                # BIO 133 - Physiology and Ecology (1-hour lectures)
+                (10109, 'BIO 133', 'Physiology and Ecology', '08:00AM', '09:00AM', 'Friday', 3),
+                (10110, 'BIO 133', 'Physiology and Ecology', '01:00PM', '02:00PM', 'Wednesday', 3),
+                (10111, 'BIO 133', 'Physiology and Ecology', '10:00AM', '11:00AM', 'Tuesday', 3),
+
+                # BIO 136 - Anatomy and Ecology Lab (2-hour labs)
+                (10112, 'BIO 136', 'Anatomy and Ecology Lab', '10:00AM', '12:00PM', 'Monday',2),
+                (10113, 'BIO 136', 'Anatomy and Ecology Lab', '02:00PM', '04:00PM', 'Thursday',2),
+                (10114, 'BIO 136', 'Anatomy and Ecology Lab', '08:00AM', '10:00AM', 'Wednesday',2),
+
+                # CHEM 102 - General Chemistry II (1-hour lectures)
+                (10115, 'CHEM 102', 'General Chemistry II', '09:00AM', '10:00AM', 'Thursday', 3),
+                (10116, 'CHEM 102', 'General Chemistry II', '11:00AM', '12:00PM', 'Tuesday', 3),
+                (10117, 'CHEM 102', 'General Chemistry II', '01:00PM', '02:00PM', 'Friday', 3),
+
+                # CHEM 103 - General Chemistry III (1-hour lectures)
+                (10118, 'CHEM 103', 'General Chemistry III', '08:00AM', '09:00AM', 'Monday', 3),
+                (10119, 'CHEM 103', 'General Chemistry III', '12:00PM', '01:00PM', 'Wednesday', 3),
+                (10120, 'CHEM 103', 'General Chemistry III', '02:00PM', '03:00PM', 'Tuesday', 3),
+
+                # PHYS 101 - Fundamentals of Physics I (1-hour lectures)
+                (10121, 'PHYS 101', 'Fundamentals of Physics I', '10:00AM', '11:00AM', 'Friday', 3),
+                (10122, 'PHYS 101', 'Fundamentals of Physics I', '01:00PM', '02:00PM', 'Monday', 3),
+                (10123, 'PHYS 101', 'Fundamentals of Physics I', '03:00PM', '04:00PM', 'Wednesday', 3),
+
+                # PHYS 102 - Fundamentals of Physics II (1-hour lectures)
+                (10124, 'PHYS 102', 'Fundamentals of Physics II', '09:00AM', '10:00AM', 'Tuesday', 3),
+                (10125, 'PHYS 102', 'Fundamentals of Physics II', '11:00AM', '12:00PM', 'Thursday', 3),
+                (10126, 'PHYS 102', 'Fundamentals of Physics II', '02:00PM', '03:00PM', 'Monday', 3),
+
+                # PHYS 201 - Fundamentals of Physics III (1-hour lectures)
+                (10127, 'PHYS 201', 'Fundamentals of Physics III', '08:00AM', '09:00AM', 'Wednesday', 3),
+                (10128, 'PHYS 201', 'Fundamentals of Physics III', '12:00PM', '01:00PM', 'Friday', 3),
+                (10129, 'PHYS 201', 'Fundamentals of Physics III', '03:00PM', '04:00PM', 'Tuesday', 3),
+
+                # MATH 122 - Calculus II (1-hour lectures)
+                (10130, 'MATH 122', 'Calculus II', '09:00AM', '10:00AM', 'Monday', 4),
+                (10131, 'MATH 122', 'Calculus II', '11:00AM', '12:00PM', 'Wednesday', 4),
+                (10132, 'MATH 122', 'Calculus II', '02:00PM', '03:00PM', 'Friday', 4),
+
+                # MATH 123 - Calculus III (1-hour lectures)
+                (10133, 'MATH 123', 'Calculus III', '08:00AM', '09:00AM', 'Tuesday', 4),
+                (10134, 'MATH 123', 'Calculus III', '01:00PM', '02:00PM', 'Thursday', 4),
+                (10135, 'MATH 123', 'Calculus III', '10:00AM', '11:00AM', 'Friday', 4),
+
+                # MATH 200 - Multivariate Calculus (1-hour lectures)
+                (10136, 'MATH 200', 'Multivariate Calculus', '10:00AM', '11:00AM', 'Tuesday', 4),
+                (10137, 'MATH 200', 'Multivariate Calculus', '12:00PM', '01:00PM', 'Thursday', 4),
+                (10138, 'MATH 200', 'Multivariate Calculus', '03:00PM', '04:00PM', 'Monday', 4),
+
+                # MATH 201 - Linear Algebra (1-hour lectures)
+                (10139, 'MATH 201', 'Linear Algebra', '09:00AM', '10:00AM', 'Wednesday', 4),
+                (10140, 'MATH 201', 'Linear Algebra', '02:00PM', '03:00PM', 'Tuesday', 4),
+                (10141, 'MATH 201', 'Linear Algebra', '11:00AM', '12:00PM', 'Friday', 4),
+
+                # MATH 221 - Discrete Mathematics (1-hour lectures)
+                (10142, 'MATH 221', 'Discrete Mathematics', '08:00AM', '09:00AM', 'Friday', 4),
+                (10143, 'MATH 221', 'Discrete Mathematics', '01:00PM', '02:00PM', 'Wednesday', 4),
+                (10144, 'MATH 221', 'Discrete Mathematics', '10:00AM', '11:00AM', 'Tuesday', 4),
+
+                # MATH 311 - Probability and Statistics I (1-hour lectures)
+                (10145, 'MATH 311', 'Probability and Statistics I', '10:00AM', '11:00AM', 'Monday', 4),
+                (10146, 'MATH 311', 'Probability and Statistics I', '02:00PM', '03:00PM', 'Thursday', 4),
+                (10147, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Friday', 4)
             ]
         
             for course in mock_courses:
