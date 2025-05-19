@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compare Schedules - Drexel Dashboard</title>
+    <title>Saved Schedules - Drexel Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
     <style>
@@ -14,7 +14,7 @@
         .sidebar-menu a { color: #FFD700; text-decoration: none; }
         .navbar { background: #003087; padding: 10px; }
         .nav-links a { color: #FFD700; margin-left: 15px; }
-        .comparison-container { position: relative; overflow: hidden; }
+        .schedules-container { position: relative; overflow: hidden; }
         .schedule-table-wrapper { overflow-x: auto; }
         .schedule-table { width: 100%; border-collapse: collapse; }
         .schedule-table th, .schedule-table td { border: 1px solid #FFD700; padding: 10px; text-align: left; }
@@ -23,10 +23,10 @@
         .arrow-btn { background: #FFD700; border: none; padding: 10px; cursor: pointer; position: absolute; top: 50%; transform: translateY(-50%); }
         .left-arrow { left: 0; }
         .right-arrow { right: 0; }
-        .action-btn { background: #FFD700; color: #07294E; border: none; padding: 5px 10px; cursor: pointer; }
+        .action-btn { background: #FFD700; color: #07294E; border: none; padding: 5px 10px; cursor: pointer; margin-right: 5px; }
         .generate-btn { background: #FFD700; color: #07294E; padding: 10px 20px; text-decoration: none; display: inline-block; }
         @media (max-width: 768px) {
-            .schedule-table { min-width: 600px; }
+            .schedule-table { min-width: 800px; }
             .arrow-btn { display: block; }
         }
     </style>
@@ -36,25 +36,33 @@
         <div class="sidebar">
             <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
             <ul class="sidebar-menu">
-                <li><a href="{{ url_for('schedule') }}">Schedule</a></li> <!-- Changed from 'views.schedule' -->
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="{{ url_for('courses') }}">My Courses</a></li>
                 <li><a href="#">My Progress</a></li>
-                <li><a href="{{ url_for('profile') }}">Account Settings</a></li> <!-- Changed from 'views.profile' -->
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
             </ul>
         </div>
         <div class="main-content">
             <div class="navbar">
                 <span class="time" aria-label="Current time display">8 AM</span>
                 <ul class="nav-links">
-                    <li><a href="{{ url_for('dashboard') }}">Home</a></li> 
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
                     <li><a href="{{ url_for('courses') }}">Courses</a></li>
                     <li><a href="#">About</a></li>
-                    <li><a href="{{ url_for('profile') }}">Profile</a></li>  
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li> 
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
             </div>
-            <h1>Compare Schedules</h1>
+            <h1>Saved Schedules</h1>
+            <!-- Add Search Form -->
+            <form method="GET" action="{{ url_for('saved_schedules') }}" style="margin-bottom: 20px;">
+                <input type="text" name="search" placeholder="Search by course code..." value="{{ request.args.get('search', '') }}" style="padding: 8px; width: 200px; background: #fff; color: #07294E; border: 1px solid #FFD700;">
+                <button type="submit" class="action-btn">Search</button>
+                {% if request.args.get('search') %}
+                    <a href="{{ url_for('saved_schedules') }}" class="action-btn">Clear Search</a>
+                {% endif %}
+            </form>
             <div class="flash-messages">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -64,74 +72,60 @@
                     {% endif %}
                 {% endwith %}
             </div>
-            {% if schedules and schedules|length == 3 %}
-                <div class="comparison-container">
-                    <button class="arrow-btn left-arrow" aria-label="Scroll left">&#9664;</button>
+            {% if schedules %}
+                <div class="schedules-container">
+                    <button class="arrow-btn left-arrow" aria-label="Scroll left">◀</button>
                     <div class="schedule-table-wrapper">
                         <table class="schedule-table">
                             <thead>
                                 <tr>
-                                    <th>Details</th>
-                                    <th>Schedule 1</th>
-                                    <th>Schedule 2</th>
-                                    <th>Schedule 3</th>
+                                    <th>Courses</th>
+                                    <th>Total Credits</th>
+                                    <th>Time Range</th>
+                                    <th>Spacing</th>
+                                    <th>Created At</th>
+                                    <th>Favorite</th>
+                                    <th>Priority</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><strong>Courses</strong></td>
-                                    {% for schedule in schedules %}
+                                {% for schedule in schedules %}
+                                    <tr>
                                         <td>
                                             <ul>
                                                 {% for course in schedule.courses %}
-                                                    <li>{{ course.course_code }}: {{ course.course_name }} ({{ course.day }} {{ course.start_time }}-{{ course.end_time }})</li>
+                                                    <li>{{ course }}</li>
                                                 {% endfor %}
                                             </ul>
                                         </td>
-                                    {% endfor %}
-                                </tr>
-                                <tr>
-                                    <td><strong>Total Credits</strong></td>
-                                    {% for schedule in schedules %}
                                         <td>{{ schedule.total_credits }}</td>
-                                    {% endfor %}
-                                </tr>
-                                <tr>
-                                    <td><strong>Time Range</strong></td>
-                                    {% for schedule in schedules %}
                                         <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
-                                    {% endfor %}
-                                </tr>
-                                <tr>
-                                    <td><strong>Spacing</strong></td>
-                                    {% for schedule in schedules %}
                                         <td>{{ schedule.spacing }}</td>
-                                    {% endfor %}
-                                </tr>
-                                <tr>
-                                    <td><strong>Actions</strong></td>
-                                    {% for i in range(3) %}
+                                        <td>{{ schedule.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>{{ 'Yes' if schedule.is_favorite else 'No' }}</td>
+                                        <td>{{ 'Yes' if schedule.is_priority else 'No' }}</td>
                                         <td>
-                                            <form action="{{ url_for('save_schedule', index=i) }}" method="POST" style="display:inline;">
-                                                <button type="submit" class="action-btn">Save</button>
+                                            <form action="{{ url_for('toggle_favorite', schedule_id=schedule.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="action-btn">{{ 'Unfavorite' if schedule.is_favorite else 'Favorite' }}</button>
                                             </form>
-                                            <form action="{{ url_for('toggle_favorite', index=i) }}" method="POST" style="display:inline;">
-                                                <button type="submit" class="action-btn favorite-btn">Favorite</button>
+                                            <form action="{{ url_for('set_priority', schedule_id=schedule.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="action-btn">{{ 'Remove Priority' if schedule.is_priority else 'Set Priority' }}</button>
                                             </form>
-                                            <form action="{{ url_for('set_priority', index=i) }}" method="POST" style="display:inline;">
-                                                <button type="submit" class="action-btn priority-btn">Priority</button>
+                                            <form action="{{ url_for('delete_schedule', schedule_id=schedule.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="action-btn" onclick="return confirm('Are you sure you want to delete this schedule?');">Delete</button>
                                             </form>
                                         </td>
-                                    {% endfor %}
-                                </tr>
+                                    </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    <button class="arrow-btn right-arrow" aria-label="Scroll right">&#9654;</button>
+                    <button class="arrow-btn right-arrow" aria-label="Scroll right">▶</button>
                 </div>
-                <a href="{{ url_for('schedule') }}" class="generate-btn">Generate Again</a>
+                <a href="{{ url_for('schedule') }}" class="generate-btn">Generate New Schedule</a>
             {% else %}
-                <p class="no-schedule">No schedules available to compare. Please generate schedules first.</p>
+                <p class="no-schedule">No saved schedules available. Please generate and save a schedule first.</p>
             {% endif %}
         </div>
     </div>

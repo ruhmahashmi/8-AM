@@ -482,12 +482,29 @@ def saved_schedules():
         columns = [row[1] for row in result]
         conn.close()
         
+        # Initialize base query
+        query = Schedule.query.filter_by(user_id=current_user.id)
+        
+        # Add search functionality
+        search_query = request.args.get('search', '').strip()
+        if search_query:
+            query = query.filter(
+                or_(
+                    Schedule.course1.ilike(f'%{search_query}%'),
+                    Schedule.course2.ilike(f'%{search_query}%'),
+                    Schedule.course3.ilike(f'%{search_query}%'),
+                    Schedule.course4.ilike(f'%{search_query}%'),
+                    Schedule.course5.ilike(f'%{search_query}%')
+                )
+            )
+        
+        # Apply sorting based on priority, favorite, and creation date
         if 'is_favorite' not in columns or 'is_priority' not in columns:
             logger.error("is_favorite or is_priority column missing in schedule table")
             flash('Priority and favorite features unavailable. Please contact support.', 'error')
-            schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(Schedule.created_at.desc()).all()
+            schedules = query.order_by(Schedule.created_at.desc()).all()
         else:
-            schedules = Schedule.query.filter_by(user_id=current_user.id).order_by(
+            schedules = query.order_by(
                 Schedule.is_priority.desc(),
                 Schedule.is_favorite.desc(),
                 Schedule.created_at.desc()
@@ -525,7 +542,7 @@ def saved_schedules():
         logger.error(f"Error fetching saved schedules for user {current_user.id}: {str(e)}")
         flash('Error loading saved schedules. Please try again.', 'error')
         return redirect(url_for('dashboard'))
-
+    
 @app.route('/compare_schedules', methods=['GET'])
 @login_required
 def compare_schedules():
