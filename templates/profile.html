@@ -14,7 +14,6 @@
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li> <!-- Changed from 'views.schedule' -->
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="{{ url_for('courses') }}">My Courses</a></li>
-                <li><a href="#">My Progress</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li> <!-- Changed from 'views.profile' -->
             </ul>
         </div>
@@ -24,7 +23,6 @@
                 <ul class="nav-links">
                     <li><a href="{{ url_for('dashboard') }}">Home</a></li> 
                     <li><a href="{{ url_for('courses') }}">Courses</a></li>
-                    <li><a href="#">About</a></li>
                     <li><a href="{{ url_for('profile') }}">Profile</a></li> 
                     <li><a href="{{ url_for('logout') }}">Logout</a></li> 
                 </ul>
@@ -35,14 +33,14 @@
                     {% if user.profilePic %}
                         <img id="profile-pic" src="data:image/jpeg;base64,{{ user.profilePic|b64encode }}" alt="Profile Picture" class="profile-pic">
                     {% else %}
-                        <img id="profile-pic" src="{{ url_for('static', filename='default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+                        <img id="profile-pic" src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Profile Picture" class="profile-pic">
                     {% endif %}
                     <form id="photoForm" action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
                         <input type="file" id="upload-pic" name="profilePic" accept="image/*" style="display: none;">
                         <button type="button" id="edit-pic-btn">Change Picture</button>
                         <button type="submit" style="display: none;" id="save-pic-btn">Save Picture</button>
                     </form>
-                </div>
+                </div>                
                 <div class="profile-details" id="profileDetails">
                     <p><strong>Email:</strong> <span id="display-email">{{ user.email }}</span></p>
                     <p><strong>First Name:</strong> <span id="display-firstName">{{ user.firstName }}</span></p>

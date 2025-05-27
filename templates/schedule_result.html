@@ -19,6 +19,18 @@
             text-align: center;
             font-weight: bold;
         }
+        .export-btn {
+        display: inline-block; /* Ensure buttons behave like block-level elements */
+        text-align: center;    /* Center the text inside the buttons */
+        padding: 10px 20px;    /* Optional: Adjust padding for button size */
+        width: 100%;           /* Optional: Make the button full-width (if desired) */
+        cursor: pointer;      /* Optional: Change cursor to pointer */
+    }
+    .save-btn, .variant-btn, .export-btn {
+        display: inline-block; /* Ensure buttons behave like block-level elements */
+        text-align: center;    /* Center the text inside the buttons */
+        width: auto;           /* Optional: Adjust button width automatically */
+    }
     </style>
 </head>
 <body>
@@ -29,7 +41,6 @@
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li> <!-- Changed from 'views.schedule' -->
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="{{ url_for('courses') }}">My Courses</a></li>
-                <li><a href="#">My Progress</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li> <!-- Changed from 'views.profile' -->
             </ul>
         </div>
@@ -39,7 +50,6 @@
                 <ul class="nav-links">
                     <li><a href="{{ url_for('dashboard') }}">Home</a></li>
                     <li><a href="#">Courses</a></li>
-                    <li><a href="#">About</a></li>
                     <li><a href="{{ url_for('profile') }}">Profile</a></li>
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
@@ -103,6 +113,7 @@
                     </div>
                     <button class="export-btn" id="try-another-schedule">Try Another Schedule</button>
                 </div>
+                
             </div>
         </div>
     </div>

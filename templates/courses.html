@@ -6,6 +6,36 @@
     <title>My Courses</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+<style>
+    .filter-container {
+        display: flex;
+        gap: 20px; /* Adds space between the elements */
+        flex-wrap: wrap; /* Allows wrapping if there's not enough space */
+        justify-content: flex-start; /* Aligns items to the left */
+        margin-bottom: 20px; /* Adds space below the filter container */
+    }
+
+    .course-select-container {
+        flex: 1 1 45%; /* Allow the search bar to grow and shrink, with a minimum width of 45% */
+        margin-right: 10px; /* Adds space between the search bar and the dropdown */
+    }
+
+    #creditFilter {
+        flex: 1 1 45%; /* Allow the dropdown to grow and shrink, with a minimum width of 45% */
+        margin-left: 10px; /* Adds space between the dropdown and the search bar */
+    }
+
+    .search-course-input {
+        width: 100%; /* Ensures input fields take up the full width of their container */
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box; /* Ensures padding is included in the element's total width */
+    }
+</style>
+
+
 <body>
     <div class="container">
         <div class="sidebar">
@@ -14,7 +44,6 @@
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="{{ url_for('courses') }}">My Courses</a></li>
-                <li><a href="#">My Progress</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
             </ul>
         </div>
@@ -24,7 +53,6 @@
                 <ul class="nav-links">
                     <li><a href="{{ url_for('dashboard') }}">Home</a></li>
                     <li><a href="{{ url_for('courses') }}">Courses</a></li>
-                    <li><a href="#">About</a></li>
                     <li><a href="{{ url_for('profile') }}">Profile</a></li>
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
@@ -32,7 +60,7 @@
             <h1>My Courses</h1>
             <div class="courses-container">
                 <!-- Search and Filter Section -->
-                <div class="filter-container" style="margin-bottom: 20px; display: flex; gap: 20px;">
+                <div class="filter-container">
                     <div class="course-select-container">
                         <input type="text" id="searchInput" class="search-course-input" placeholder="Search by course code or name...">
                     </div>
@@ -43,6 +71,7 @@
                         <option value="5">5 Credits</option>
                     </select>
                 </div>
+                
 
                 {% if courses %}
                     <table class="table table-striped" id="coursesTable">
