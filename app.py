@@ -939,7 +939,58 @@ def init_db():
                 # MATH 311 - Probability and Statistics I (1-hour lectures)
                 (10145, 'MATH 311', 'Probability and Statistics I', '10:00AM', '11:00AM', 'Monday', 4),
                 (10146, 'MATH 311', 'Probability and Statistics I', '02:00PM', '03:00PM', 'Thursday', 4),
-                (10147, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Friday', 4)
+                (10147, 'MATH 311', 'Probability and Statistics I', '03:00PM', '04:00PM', 'Friday', 4),
+
+                # CS 458 – Data Structures and Algorithms I
+                (100148, 'CS 458', 'Data Structures and Algorithms I', '10:00AM', '11:30AM', 'Monday', 3),
+                (100149, 'CS 458', 'Data Structures and Algorithms I', '01:00PM', '02:30PM', 'Wednesday', 3),
+                (100150, 'CS 458', 'Data Structures and Algorithms I', '03:00PM', '04:30PM', 'Friday', 3),
+
+                # CS 441 – Theory of Computation
+                (100151, 'CS 441', 'Theory of Computation', '09:00AM', '10:30AM', 'Tuesday', 3),
+                (100152, 'CS 441', 'Theory of Computation', '11:00AM', '12:30PM', 'Thursday', 3),
+                (100153, 'CS 441', 'Theory of Computation', '02:00PM', '03:30PM', 'Monday', 3),
+
+                # CS 429 – Operating Systems
+                (100154, 'CS 429', 'Operating Systems', '08:30AM', '10:00AM', 'Wednesday', 3),
+                (100155, 'CS 429', 'Operating Systems', '12:00PM', '01:30PM', 'Friday', 3),
+                (100156, 'CS 429', 'Operating Systems', '03:30PM', '05:00PM', 'Tuesday', 3),
+
+                # CS 461 – Database Systems
+                (100157, 'CS 461', 'Database Systems', '09:00AM', '10:30AM', 'Monday', 3),
+                (100158, 'CS 461', 'Database Systems', '01:00PM', '02:30PM', 'Thursday', 3),
+                (100159, 'CS 461', 'Database Systems', '04:00PM', '05:30PM', 'Wednesday', 3),
+
+                # CS 472 – Computer Networks
+                (100160, 'CS 472', 'Computer Networks', '08:00AM', '09:30AM', 'Friday', 3),
+                (100161, 'CS 472', 'Computer Networks', '10:00AM', '11:30AM', 'Tuesday', 3),
+                (100162, 'CS 472', 'Computer Networks', '01:00PM', '02:30PM', 'Monday', 3),
+
+                # CS 375 – Web Development
+                (100163, 'CS 375', 'Web Development', '09:00AM', '10:30AM', 'Thursday', 3),
+                (100164, 'CS 375', 'Web Development', '12:00PM', '01:30PM', 'Tuesday', 3),
+                (100165, 'CS 375', 'Web Development', '03:00PM', '04:30PM', 'Friday', 3),
+
+                # CS 380 – Artificial Intelligence
+                (100166, 'CS 380', 'Artificial Intelligence', '10:00AM', '11:30AM', 'Wednesday', 3),
+                (100167, 'CS 380', 'Artificial Intelligence', '01:00PM', '02:30PM', 'Friday', 3),
+                (100168, 'CS 380', 'Artificial Intelligence', '03:30PM', '05:00PM', 'Monday', 3),
+
+                # CS 475 – Network Security
+                (100169, 'CS 475', 'Network Security', '08:00AM', '09:30AM', 'Thursday', 3),
+                (100170, 'CS 475', 'Network Security', '11:00AM', '12:30PM', 'Tuesday', 3),
+                (100171, 'CS 475', 'Network Security', '02:00PM', '03:30PM', 'Wednesday', 3),
+
+                # CS 377 – Software Security
+                (100172, 'CS 377', 'Software Security', '09:00AM', '10:30AM', 'Monday', 3),
+                (100173, 'CS 377', 'Software Security', '12:00PM', '01:30PM', 'Thursday', 3),
+                (100174, 'CS 377', 'Software Security', '03:00PM', '04:30PM', 'Tuesday', 3),
+
+                # SE 320 – Software Testing
+                (100175, 'SE 320', 'Software Testing', '09:00AM', '10:30AM', 'Tuesday', 3),
+                (100176, 'SE 320', 'Software Testing', '11:00AM', '12:30PM', 'Thursday', 3),
+                (100177, 'SE 320', 'Software Testing', '02:00PM', '03:30PM', 'Friday', 3)
+
             ]
         
             for course in mock_courses:
