@@ -521,7 +521,7 @@ def saved_schedules():
             # Get unique course codes
             unique_courses = list(set(courses))
             # Query credits for these courses
-            course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+            course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).group_by(Course.course_code).all()
             total_credits = sum(course.credits for course in course_credits) if course_credits else 0
             # Create a dictionary to pass to the template
             schedule_dict = {
@@ -537,7 +537,7 @@ def saved_schedules():
             }
             schedules_with_credits.append(schedule_dict)
         
-        return render_template('saved_schedules.html', schedules=schedules_with_credits)
+        return render_template('saved_schedules.html', schedules=schedules_with_credits, current_time=datetime.now().strftime('%I:%M %p %Z'))
     except Exception as e:
         logger.error(f"Error fetching saved schedules for user {current_user.id}: {str(e)}")
         flash('Error loading saved schedules. Please try again.', 'error')
@@ -568,7 +568,7 @@ def compare_schedules():
                 # Get unique course codes
                 unique_courses = list(set(courses))
                 # Query credits for these courses
-                course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).distinct(Course.course_code).all()
+                course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).group_by(Course.course_code).all()
                 total_credits = sum(course.credits for course in course_credits) if course_credits else 0
 
                 schedule_dict = {
@@ -657,6 +657,7 @@ def display_schedule():
     logger.debug(f"Schedule ID: {schedule_id}, source: {'request.args' if request.args.get('schedule_id') else 'session' if session.get('schedule_id') else 'none'}")
     schedule = session.get('schedule', [])
     total_credits = 0
+    courses_selected = session.get('courses_selected', [])
 
     if schedule_id:
         saved_schedule = Schedule.query.get(schedule_id)
@@ -680,9 +681,10 @@ def display_schedule():
                 session['end_time'] = saved_schedule.end_time
                 session['spacing'] = saved_schedule.spacing
                 # Calculate total credits
-                course_credits = Course.query.filter(Course.course_code.in_(courses_selected)).distinct(Course.course_code).all()
+                unique_courses = list(set(courses_selected))
+                course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).group_by(Course.course_code).all()
                 total_credits = sum(course.credits for course in course_credits)
-                logger.debug(f"Calculated total credits: {total_credits}")  # Debug log
+                logger.debug(f"Calculated total credits: {total_credits}")
                 session['total_credits'] = total_credits
                 logger.info(f"Regenerated schedule ID {schedule_id} for user {current_user.id}")
             else:
@@ -697,14 +699,14 @@ def display_schedule():
             return redirect(url_for('schedule'))
     else:
         # If no schedule_id, get total credits from session and courses
-        courses_selected = session.get('courses_selected', [])
         if courses_selected:
-            course_credits = Course.query.filter(Course.course_code.in_(courses_selected)).distinct(Course.course_code).all()
+            unique_courses = list(set(courses_selected))
+            course_credits = Course.query.filter(Course.course_code.in_(unique_courses)).group_by(Course.course_code).all()
             total_credits = sum(course.credits for course in course_credits)
-            logger.debug(f"Calculated total credits from session: {total_credits}")  # Debug log
+            logger.debug(f"Calculated total credits from session: {total_credits}")
         else:
             total_credits = session.get('total_credits', 0)
-            logger.debug(f"Got total credits from session: {total_credits}")  # Debug log
+            logger.debug(f"Got total credits from session: {total_credits}")
 
     if not schedule:
         logger.error(f"No schedule available for user {current_user.id}")
