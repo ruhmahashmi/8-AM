@@ -747,6 +747,10 @@ def courses():
     logger.debug(f"Courses fetched: {[course.course_code for course in courses]}")
     return render_template('courses.html', user=current_user, courses=courses)
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 @app.route('/logout')
 @login_required
 def logout():

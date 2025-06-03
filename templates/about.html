@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About 8AM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <img src="{{ url_for('static', filename='drexel_logo.png') }}" alt="Drexel Logo" class="logo">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+                <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
+                <li><a href="{{ url_for('courses') }}">My Courses</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
+                <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <nav class="navbar">
+                <span class="time">8 AM</span>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    <li><a href="{{ url_for('courses') }}">Courses</a></li>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+            <h1>About 8AM</h1>
+            <div class="about-container">
+                <h2>Our Mission</h2>
+                <p>8AM is an innovative, automated course scheduling website designed to simplify academic planning for students. Built using HTML, CSS, Python, JavaScript, and SQL, our platform empowers users to create personalized class schedules effortlessly. By inputting preferences such as class times, course spacing, and required classes, 8AM's smart algorithm generates optimized schedules in seconds, saving students time and reducing the stress of manual planning.</p>
+                
+                <h2>Why 8AM?</h2>
+                <p>Think about it—yes, you can solve math problems on your own, but why not use a calculator? 8AM is the calculator for course scheduling. Just input your preferences—like class times and how spaced out you want your classes to be—and the classes you need, and let our algorithm do the rest. With features like ability to plan for majors or minors, we make academic planning as easy as pressing a button. Our slogan says it all: <strong>"8AM: Your Early Start to a Better Semester."</strong></p>
+                
+                <h2>Created for Drexel CI102 and CI103</h2>
+                <p>8AM was developed as a project for Drexel University's CI102 and CI103 courses, showcasing the power of collaborative coding and innovative design. This platform reflects the dedication and creativity of our team, tailored specifically to meet the needs of students navigating the complexities of course scheduling.</p>
+                
+                <h2>Meet the Contributors</h2>
+                <p>Our talented team brought 8AM to life:</p>
+                <ul>
+                    <li>Ruhma Hashmi</li>
+                    <li>Greeva Yava</li>
+                    <li>Leyla Isayeva</li>
+                    <li>Uyanga Chuluunbaatar</li>
+                </ul>
+                
+                <h2>Press Release</h2>
+                <h3>Introducing 8AM: The Revolutionary Course Scheduling Calculator for Students</h3>
+                <p>Say goodbye to the frustration of endless course juggling. 8AM is the ultimate hack for stress-free scheduling. Designed to take the chaos out of academic planning, 8AM is your go-to tool for building the perfect schedule in seconds. With smart features, 8AM doesn’t just plan your semester—it sets you up for success. Because who said mornings (or class schedules) have to be hard?</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

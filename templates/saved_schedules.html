@@ -14,15 +14,17 @@
                 <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
                 <li><a href="{{ url_for('saved_schedules') }}">Saved Schedules</a></li>
                 <li><a href="{{ url_for('courses') }}">My Courses</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
                 <li><a href="{{ url_for('profile') }}">Account Settings</a></li>
             </ul>
         </div>
         <div class="main-content">
             <nav class="navbar">
-                <span class="current-time">{{ current_time }}</span>
+                <span class="time">8 AM</span>
                 <ul class="nav-links">
                     <li><a href="{{ url_for('dashboard') }}">Home</a></li>
                     <li><a href="{{ url_for('courses') }}">Courses</a></li>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
                     <li><a href="{{ url_for('profile') }}">Profile</a></li>
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
